@@ -362,6 +362,17 @@
     .user-menu-nome  { font-size: 15px; font-weight: 700; margin-bottom: 2px; }
     .user-menu-email { font-size: 11px; color: var(--muted); margin-bottom: 14px; word-break: break-all; }
 
+    /* ── Orçamento ── */
+    .orc-fixo-item { display:flex; justify-content:space-between; padding:5px 0; font-size:13px; border-bottom:1px solid var(--border); }
+    .orc-fixo-item:last-child { border-bottom:none; }
+    .orc-gasto-row { display:flex; gap:8px; margin-top:10px; align-items:center; }
+
+    /* ── Patrimônio ── */
+    .pat-conta { display:flex; justify-content:space-between; align-items:flex-start; padding:7px 0; border-bottom:1px solid var(--border); font-size:13px; }
+    .pat-conta:last-child { border-bottom:none; }
+    .pat-val-wrap { text-align:right; }
+    .pat-input { width:110px; font-size:12px !important; padding:4px 8px !important; margin-top:4px; }
+
     /* ── Login Supabase (email + senha) ── */
     .login-input-email { text-align: left !important; letter-spacing: normal !important; }
   </style>
@@ -478,8 +489,10 @@ const DEFAULT_DATA = {
     gata: "Mel"
   },
   financeiro: {
-    cotacao_eur_brl: 6.5,
-    renda_mensal: { guilherme: 5600, esposa: 2000, total: 7600 }
+    cotacao_eur_brl: 5.8527,
+    cotacao_usd_brl: 5.70,
+    cotacao_jpy_brl: 0.038,
+    renda_mensal: { guilherme: 6000, esposa: 1600, total: 7600 }
   },
   seis_jarros: {
     jarros: [
@@ -494,7 +507,7 @@ const DEFAULT_DATA = {
   baldes_valencia: {
     balde_euros: {
       id:"EUROS", nome:"Balde Euros", emoji:"💶", moeda:"EUR",
-      saldo_atual:76, meta:12000, aporte_mensal:760, onde:"Wise",
+      saldo_atual:76.46, meta:12000, aporte_mensal:760, onde:"Wise",
       meta_aporte_mensal:1976, aporte_mes_atual:0, mes_corrente:null,
       instrucao:"Transferir R$760 toda 2ª quarta. Não tocar até Valencia."
     },
@@ -511,7 +524,7 @@ const DEFAULT_DATA = {
     },
     balde_emergencia: {
       id:"EMERGENCIA", nome:"Emergência", emoji:"🛡️", moeda:"BRL",
-      saldo_atual:0, meta:22800, aporte_mensal:0, onde:"CDB",
+      saldo_atual:12935.75, meta:19200, aporte_mensal:0, onde:"Nubank + Inter Esposa",
       meta_aporte_mensal:228, aporte_mes_atual:0, mes_corrente:null,
       meta_minima:7600,
       instrucao:"6 meses de renda. Não misturar com Balde Viagem."
@@ -535,9 +548,9 @@ const DEFAULT_DATA = {
     { periodo:"Mar/2029",  acao:"Solicitar cidadania espanhola 🇪🇸",               detalhe:"1 ano de residência com cônjuge espanhol.",                                                                                                        status:"sonho"     }
   ],
   metas: [
-    { id:"capital_chegada",   nome:"Capital na chegada", emoji:"💶", moeda:"EUR", valor_atual:76,   valor_alvo:12000, prazo:"2028-03-01", status:"em_andamento" },
-    { id:"balde_viagem_meta", nome:"Balde Viagem",       emoji:"✈️", moeda:"BRL", valor_atual:0,    valor_alvo:14550, prazo:"2028-01-01", status:"nao_iniciado" },
-    { id:"reserva_6meses",    nome:"Reserva 6 meses",    emoji:"🛡️", moeda:"BRL", valor_atual:0,    valor_alvo:22800, prazo:"2028-01-01", status:"nao_iniciado" },
+    { id:"capital_chegada",   nome:"Capital na chegada", emoji:"💶", moeda:"EUR", valor_atual:76.46,    valor_alvo:12000, prazo:"2028-03-01", status:"em_andamento" },
+    { id:"balde_viagem_meta", nome:"Balde Viagem",       emoji:"✈️", moeda:"BRL", valor_atual:0,        valor_alvo:14550, prazo:"2028-01-01", status:"nao_iniciado" },
+    { id:"reserva_6meses",    nome:"Reserva 6 meses",    emoji:"🛡️", moeda:"BRL", valor_atual:12935.75, valor_alvo:19200, prazo:"2028-01-01", status:"em_andamento" },
     { id:"passaporte",        nome:"Passaporte emitido", emoji:"🛂", moeda:null,   valor_atual:null, valor_alvo:null,  prazo:"2026-08-01", status:"nao_iniciado" },
     { id:"streak_espanhol",   nome:"Streak Duolingo 365d",emoji:"🇪🇸",moeda:null,  valor_atual:null, valor_alvo:null,  prazo:"2027-06-01", status:"nao_iniciado" }
   ],
@@ -549,6 +562,36 @@ const DEFAULT_DATA = {
       { mes:"Agosto/2026", tema:"Consolidação + primeiro passo profissional",acoes:["60 dias de streak — comemorar 🎉","Criar perfil no Upwork","2ª quarta: terceiro ciclo","Ritual semanal rodando há 4 semanas"], concluidas:[] }
     ],
     tres_numeros: ["🔥 Streak do espanhol — não pode zerar","💶 Saldo em euros na Wise — cresce toda 2ª quarta","🐷 Saldo no Tesouro Selic — cresce toda 2ª quarta"]
+  },
+  orcamento: {
+    fixos: [
+      { id:'internet_celular', nome:'Internet + celular', valor:144.90 },
+      { id:'academia',         nome:'Academia',           valor:120.00 },
+      { id:'amazon',           nome:'Amazon',             valor:19.90  },
+      { id:'claude_ai',        nome:'Claude AI',          valor:110.00 },
+      { id:'spotify',          nome:'Spotify',            valor:20.00  },
+      { id:'youtube',          nome:'YouTube',            valor:30.00  }
+    ],
+    variaveis: [
+      { id:'aluguel',     nome:'Aluguel + água + taxas', emoji:'🏠', meta:1300, real_mes:0, mes_corrente:null },
+      { id:'alimentacao', nome:'Alimentação',             emoji:'🛒', meta:700,  real_mes:0, mes_corrente:null },
+      { id:'transporte',  nome:'Transporte (Uber)',       emoji:'🚗', meta:600,  real_mes:0, mes_corrente:null },
+      { id:'gas',         nome:'Gás',                    emoji:'🔥', meta:100,  real_mes:0, mes_corrente:null }
+    ]
+  },
+  patrimonio: {
+    guilherme: [
+      { id:'inter_conta',    nome:'Inter conta',    valor:15.35,   moeda:'BRL' },
+      { id:'inter_poupanca', nome:'Inter poupança', valor:13.05,   moeda:'BRL' },
+      { id:'nubank_pj',      nome:'Nubank PJ',      valor:5179.75, moeda:'BRL' },
+      { id:'wise_eur',       nome:'Wise EUR',       valor:76.46,   moeda:'EUR' },
+      { id:'wise_usd',       nome:'Wise USD',       valor:106.10,  moeda:'USD' },
+      { id:'wise_jpy',       nome:'Wise JPY',       valor:14352,   moeda:'JPY' },
+      { id:'wise_brl',       nome:'Wise BRL',       valor:53.00,   moeda:'BRL' }
+    ],
+    esposa: [
+      { id:'inter', nome:'Inter', valor:7756.00, moeda:'BRL' }
+    ]
   }
 };
 
@@ -811,6 +854,34 @@ function checkMesAporte() {
   if (changed) save();
 }
 
+function checkMesOrcamento() {
+  if (!D.orcamento) return;
+  const mes = mesAtual();
+  let changed = false;
+  D.orcamento.variaveis.forEach(v => {
+    if (!v.mes_corrente) { v.mes_corrente = mes; changed = true; }
+    else if (v.mes_corrente !== mes) { v.real_mes = 0; v.mes_corrente = mes; changed = true; }
+  });
+  if (changed) save();
+}
+
+function adicionarGasto(id) {
+  const inp = document.getElementById('gasto-' + id);
+  if (!inp || !D.orcamento) return;
+  const val = parseFloat(inp.value) || 0;
+  if (val <= 0) return;
+  const v = D.orcamento.variaveis.find(x => x.id === id);
+  if (!v) return;
+  v.real_mes = Math.round(((v.real_mes||0) + val) * 100) / 100;
+  save(); inp.value = ''; renderFinancas();
+}
+
+function updatePatrimonio(pessoa, itemId, val) {
+  if (!D.patrimonio || !D.patrimonio[pessoa]) return;
+  const item = D.patrimonio[pessoa].find(x => x.id === itemId);
+  if (item) { item.valor = parseFloat(val) || 0; save(); }
+}
+
 function adicionarAporte(id) {
   const inp = document.getElementById('aporte-input-' + id);
   if (!inp) return;
@@ -912,11 +983,13 @@ async function atualizarCotacao() {
   try {
     const res  = await fetch('https://open.er-api.com/v6/latest/EUR');
     const data = await res.json();
-    console.log('Cotação recebida da API:', data.rates.BRL);
-    const cx = data.rates.BRL;
-    if (!cx || isNaN(cx)) return;
-    console.log('Cotação salva:', cx);
-    D.financeiro.cotacao_eur_brl = cx;
+    const rBRL = data.rates.BRL;
+    const rUSD = data.rates.USD;
+    const rJPY = data.rates.JPY;
+    if (!rBRL || isNaN(rBRL)) return;
+    D.financeiro.cotacao_eur_brl = rBRL;
+    if (rUSD) D.financeiro.cotacao_usd_brl = Math.round((rBRL / rUSD) * 10000) / 10000;
+    if (rJPY) D.financeiro.cotacao_jpy_brl = Math.round((rBRL / rJPY) * 100000) / 100000;
     save();
     localStorage.setItem(COTACAO_KEY, hoje);
     const sid = SCREEN_ORDER[currentIdx];
@@ -1447,43 +1520,85 @@ const JARRO_COLORS = ['#ef476f','#6c63ff','#00b4d8','#00d4aa','#ffd166','#ff9f43
 const BALDE_LABELS = { EUROS:'💶 Balde Euros', VIAGEM:'✈️ Balde Viagem', EMERGENCIA:'🛡️ Emergência' };
 
 function renderFinancas() {
-  const el   = document.getElementById('screen-financas');
-  const fin  = D.financeiro;
-  const cx   = fin.cotacao_eur_brl;
-  const b    = D.baldes_valencia;
+  const el     = document.getElementById('screen-financas');
+  const fin    = D.financeiro;
+  const cx     = fin.cotacao_eur_brl;
+  const cxUSD  = fin.cotacao_usd_brl || 5.70;
+  const cxJPY  = fin.cotacao_jpy_brl || 0.038;
+  const b      = D.baldes_valencia;
   const jarros = D.seis_jarros.jarros;
+  const orc    = D.orcamento;
+  const pat    = D.patrimonio;
 
-  const renda    = fin.renda_mensal.total;
-  const nec      = jarros.find(j => j.id === 'necessidades')?.valor_mensal || 0;
-  const sobra    = renda - nec;
-  const totalEUR = (renda / cx).toFixed(0);
-  const mesesR   = Math.max(0, Math.ceil(daysLeft(D.perfil.data_embarque_alvo) / 30));
-  const eurosProj = b.balde_euros.saldo_atual + (b.balde_euros.aporte_mensal / cx) * mesesR;
+  const renda       = fin.renda_mensal.total;
+  const totalFixos  = orc ? orc.fixos.reduce((s,f)=>s+f.valor,0) : 0;
+  const totalVarReal= orc ? orc.variaveis.reduce((s,v)=>s+(v.real_mes||0),0) : 0;
+  const sobra       = renda - totalFixos - totalVarReal;
+  const mesesR      = Math.max(0, Math.ceil(daysLeft(D.perfil.data_embarque_alvo) / 30));
+  const eurosProj   = b.balde_euros.saldo_atual + (b.balde_euros.aporte_mensal / cx) * mesesR;
 
-  // Baldes
+  // ── Orçamento: fixos
+  const fixosHtml = orc ? `
+    <div class="card" style="margin-bottom:8px">
+      <div class="flex-between" style="margin-bottom:10px">
+        <div class="font-semi" style="font-size:13px">Fixos mensais</div>
+        <div class="font-semi" style="color:var(--danger)">${fmtBRL(totalFixos)}/mês</div>
+      </div>
+      ${orc.fixos.map(f=>`
+        <div class="orc-fixo-item"><span>${f.nome}</span><span class="font-semi" style="color:var(--muted)">${fmtBRL(f.valor)}</span></div>`).join('')}
+    </div>` : '';
+
+  // ── Orçamento: variáveis
+  const variaveisHtml = orc ? orc.variaveis.map(v => {
+    const p   = v.meta > 0 ? Math.min(200, Math.round(((v.real_mes||0)/v.meta)*100)) : 0;
+    const cor = p<=70?'var(--success)':p<=90?'var(--warning)':p<=100?'#ff9f43':'var(--danger)';
+    const falta = Math.max(0, v.meta-(v.real_mes||0));
+    const estouro = (v.real_mes||0) > v.meta;
+    return `
+    <div class="card" style="margin-bottom:8px;border-left:3px solid ${cor}">
+      <div class="flex-between" style="margin-bottom:6px">
+        <div class="font-semi">${v.emoji} ${v.nome}</div>
+        <div class="text-xs text-muted">Meta: ${fmtBRL(v.meta)}</div>
+      </div>
+      <div class="flex-between mt-4">
+        <div style="font-size:18px;font-weight:800;color:${cor}">${fmtBRL(v.real_mes||0)}</div>
+        <div class="text-xs" style="color:${cor};font-weight:700">${p}%</div>
+      </div>
+      <div class="progress-bar" style="height:7px;margin:6px 0">
+        <div class="progress-fill" style="width:${Math.min(100,p)}%;background:${cor}"></div>
+      </div>
+      <div class="flex-between">
+        <span class="text-xs" style="color:${estouro?'var(--danger)':'var(--muted)'}">
+          ${estouro?'⚠️ Estourou '+fmtBRL((v.real_mes||0)-v.meta):'Falta '+fmtBRL(falta)}
+        </span>
+        <span class="text-xs text-muted">${nomeMes(v.mes_corrente)}</span>
+      </div>
+      <div class="orc-gasto-row">
+        <input id="gasto-${v.id}" class="input" type="number" placeholder="+ quanto gastou?" style="font-size:13px;padding:7px 10px">
+        <button class="btn btn-primary btn-sm" onclick="adicionarGasto('${v.id}')">+ Add</button>
+      </div>
+    </div>`;
+  }).join('') : '';
+
+  // ── Baldes
   const baldesHtml = [b.balde_euros, b.balde_viagem, b.balde_emergencia].map(bd => {
     const isEUR = bd.moeda === 'EUR';
     const aporteLocal = isEUR ? bd.aporte_mensal / cx : bd.aporte_mensal;
     const p = pct(bd.saldo_atual, bd.meta);
     const meses = mesesAteMeta(bd.saldo_atual, aporteLocal, bd.meta);
-    const fmtS  = isEUR ? fmtEUR(bd.saldo_atual) : fmtBRL(bd.saldo_atual);
-    const fmtM  = isEUR ? fmtEUR(bd.meta)         : fmtBRL(bd.meta);
+    const fmtM  = isEUR ? fmtEUR(bd.meta) : fmtBRL(bd.meta);
     const aporteStr = isEUR
       ? `${fmtBRL(bd.aporte_mensal)}/mês ≈ ${fmtEUR(Math.round(aporteLocal))}`
       : bd.aporte_mensal > 0 ? `${fmtBRL(bd.aporte_mensal)}/mês` : 'sem aporte automático';
     const projText = meses === 0 ? '✅ Meta atingida!'
       : meses != null ? `⏱️ Meta em ~${meses} meses` : '';
-
     const itensHtml = bd.itens_cobertos ? `
       <div class="text-xs text-muted font-semi" style="margin:10px 0 4px;text-transform:uppercase;letter-spacing:.5px">Itens cobertos</div>
-      ${bd.itens_cobertos.map(it=>`<div class="balde-item"><span>${it.item}</span><span class="font-semi">${fmtBRL(it.valor)}</span></div>`).join('')}
-    ` : '';
-
+      ${bd.itens_cobertos.map(it=>`<div class="balde-item"><span>${it.item}</span><span class="font-semi">${fmtBRL(it.valor)}</span></div>`).join('')}` : '';
     const minHtml = bd.meta_minima ? (() => {
       const atingiu = bd.saldo_atual >= bd.meta_minima;
       return `<div class="min-target mt-8"><div class="min-mark"></div><div class="text-xs text-muted">Meta mínima ${fmtBRL(bd.meta_minima)}: <span style="color:${atingiu?'var(--success)':'var(--warning)'};font-weight:600">${atingiu?'✅ Atingida':pct(bd.saldo_atual,bd.meta_minima)+'%'}</span></div></div>`;
     })() : '';
-
     return `
     <div class="balde-card">
       <div class="flex-between" style="margin-bottom:10px">
@@ -1495,13 +1610,10 @@ function renderFinancas() {
             <div class="text-xs text-muted">${aporteStr}</div>
           </div>
         </div>
-        <div style="text-align:right">
-          <div class="text-xs text-muted">meta</div>
-          <div class="font-semi">${fmtM}</div>
-        </div>
+        <div style="text-align:right"><div class="text-xs text-muted">meta</div><div class="font-semi">${fmtM}</div></div>
       </div>
       <label>Saldo atual (${bd.moeda})</label>
-      <input class="input" type="number" value="${bd.saldo_atual}"
+      <input class="input" type="number" step="0.01" value="${bd.saldo_atual}"
         style="font-size:18px;font-weight:700;color:var(--success)"
         onchange="updateBaldeSaldo('${bd.id}', this.value)">
       ${progBar(p, 10)}
@@ -1526,8 +1638,49 @@ function renderFinancas() {
     </div>`;
   }).join('');
 
-  // Jarros
-  const jarrosHtml = jarros.map((j, i) => {
+  // ── Patrimônio
+  function patLabel(item) {
+    if (item.moeda==='EUR') return `€${Number(item.valor).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}`;
+    if (item.moeda==='USD') return `$${Number(item.valor).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}`;
+    if (item.moeda==='JPY') return `¥${Number(item.valor).toLocaleString('pt-BR',{minimumFractionDigits:0,maximumFractionDigits:0})}`;
+    return fmtBRL(item.valor);
+  }
+  function itemBRL(item) {
+    if (item.moeda==='BRL') return item.valor;
+    if (item.moeda==='EUR') return item.valor * cx;
+    if (item.moeda==='USD') return item.valor * cxUSD;
+    if (item.moeda==='JPY') return item.valor * cxJPY;
+    return item.valor;
+  }
+  let totalPat = 0;
+  function patRow(pessoa, item) {
+    const brl = itemBRL(item);
+    totalPat += brl;
+    const conv = item.moeda!=='BRL' ? `<span class="text-xs text-muted"> ≈ ${fmtBRL(Math.round(brl))}</span>` : '';
+    return `<div class="pat-conta">
+      <span>${item.nome}</span>
+      <div class="pat-val-wrap">
+        <div class="font-semi">${patLabel(item)}${conv}</div>
+        <input type="number" step="0.01" class="input pat-input" value="${item.valor}"
+          onchange="updatePatrimonio('${pessoa}','${item.id}',this.value)">
+      </div>
+    </div>`;
+  }
+  const patHtml = pat ? `
+    <div class="text-xs text-muted font-semi" style="text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Guilherme</div>
+    ${pat.guilherme.map(item=>patRow('guilherme',item)).join('')}
+    <div class="text-xs text-muted font-semi" style="text-transform:uppercase;letter-spacing:1px;margin:12px 0 6px">Esposa</div>
+    ${pat.esposa.map(item=>patRow('esposa',item)).join('')}
+    <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">
+      <div class="flex-between">
+        <div class="text-sm text-muted">Total estimado em BRL</div>
+        <div style="font-size:20px;font-weight:800;color:var(--success)">${fmtBRL(Math.round(totalPat))}</div>
+      </div>
+      <div class="text-xs text-muted" style="margin-top:4px">€1=R$${cx.toFixed(4)} · $1=R$${cxUSD.toFixed(4)} · ¥1=R$${cxJPY.toFixed(5)}</div>
+    </div>` : '';
+
+  // ── Jarros
+  const jarrosHtml = jarros.map((j,i) => {
     const badge = j.alimenta_balde ? `<div class="badge badge-primary mt-4">↗ ${BALDE_LABELS[j.alimenta_balde]}</div>` : '';
     const ekerPct = Math.round(j.percentual_eker * 100);
     const meuPct  = Math.round(j.percentual * 100);
@@ -1550,38 +1703,43 @@ function renderFinancas() {
         <div class="fin-sumbox-lbl">Renda</div>
       </div>
       <div class="fin-sumbox">
-        <div class="fin-sumbox-val" style="color:var(--danger)">${fmtBRL(nec)}</div>
-        <div class="fin-sumbox-lbl">Necessidades</div>
+        <div class="fin-sumbox-val" style="color:var(--danger)">${fmtBRL(Math.round(totalFixos+totalVarReal))}</div>
+        <div class="fin-sumbox-lbl">Gastos</div>
       </div>
       <div class="fin-sumbox">
-        <div class="fin-sumbox-val" style="color:var(--primary)">${fmtBRL(sobra)}</div>
+        <div class="fin-sumbox-val" style="color:${sobra>=0?'var(--primary)':'var(--danger)'}">${fmtBRL(Math.round(sobra))}</div>
         <div class="fin-sumbox-lbl">Sobra</div>
       </div>
     </div>
 
-    <div class="section-title">Baldes</div>
+    <div class="section-title">Orçamento</div>
+    ${fixosHtml}
+    <div class="section-title" style="margin-top:4px">Variáveis</div>
+    ${variaveisHtml}
+
+    <div class="section-title">Baldes Valencia</div>
     ${baldesHtml}
 
-    <div class="card" style="background:linear-gradient(135deg,#0d231e,#1a2e25);border-color:var(--success)">
+    <div class="card" style="background:linear-gradient(135deg,#0d231e,#1a2e25);border-color:var(--success);margin-bottom:12px">
       <div class="text-sm font-semi" style="color:var(--success)">📊 Capital projetado na chegada</div>
       <div style="font-size:28px;font-weight:800;color:var(--success);margin:6px 0">${fmtEUR(Math.round(eurosProj))}</div>
       <div class="text-xs text-muted">${mesesR} meses · câmbio R$${cx.toFixed(4)}/€ · aporte ${fmtBRL(b.balde_euros.aporte_mensal)}/mês</div>
     </div>
 
+    <div class="section-title">💰 Patrimônio Atual</div>
+    <div class="card" style="margin-bottom:12px">${patHtml}</div>
+
     <div class="section-title">Jarros (Método Eker)</div>
     <div class="card" style="padding:12px">
-      <div class="flex-between" style="margin-bottom:10px">
-        <div>
-          <div class="fin-row"><span>Guilherme</span><span class="font-semi">${fmtBRL(fin.renda_mensal.guilherme)}</span></div>
-          <div class="fin-row"><span>Esposa</span><span class="font-semi">${fmtBRL(fin.renda_mensal.esposa)}</span></div>
-          <div class="fin-row total"><span>Total</span><span style="color:var(--success)">${fmtBRL(renda)}</span></div>
-        </div>
+      <div>
+        <div class="fin-row"><span>Guilherme</span><span class="font-semi">${fmtBRL(fin.renda_mensal.guilherme)}</span></div>
+        <div class="fin-row"><span>Esposa</span><span class="font-semi">${fmtBRL(fin.renda_mensal.esposa)}</span></div>
+        <div class="fin-row total"><span>Total</span><span style="color:var(--success)">${fmtBRL(renda)}</span></div>
       </div>
-      <div class="grid-2" style="margin-top:8px">
+      <div class="grid-2" style="margin-top:10px">
         <div><label>Renda total (R$)</label><input class="input" type="number" value="${renda}" onchange="updateRenda(this.value)"></div>
         <div><label>Cotação €/R$</label><input class="input" type="number" step="0.0001" value="${Number(cx).toFixed(4)}" onchange="updateCotacao(this.value)"></div>
       </div>
-      <div class="text-xs text-muted" style="text-align:center;margin-top:6px">${fmtBRL(renda)} ≈ ${fmtEUR(totalEUR)} ao câmbio de R$${Number(cx).toFixed(4)}/€</div>
     </div>
     <div class="card">
       <div class="text-xs text-muted font-semi" style="text-align:center;margin-bottom:2px">Distribuição dos Jarros</div>
@@ -1835,6 +1993,7 @@ function concluirLogin() {
   showLoading(false);
   document.getElementById('login-screen').style.display = 'none';
   checkMesAporte();
+  checkMesOrcamento();
   loadHabitos();
   initDots(); initSwipe();
   atualizarAvatar();
