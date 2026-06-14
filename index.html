@@ -1,0 +1,1598 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Valencia 2028 🇪🇸</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    :root {
+      --bg: #0f1117;
+      --card: #1a1d2e;
+      --border: #2a2d3e;
+      --primary: #6c63ff;
+      --success: #00d4aa;
+      --warning: #ffd166;
+      --danger: #ef476f;
+      --text: #e8eaf6;
+      --muted: #8b8fa8;
+      --radius: 12px;
+      --radius-sm: 8px;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background: var(--bg); color: var(--text);
+      min-height: 100vh; padding-bottom: 76px;
+      -webkit-font-smoothing: antialiased;
+    }
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+    /* ── Layout ── */
+    .screen { display: none; max-width: 480px; margin: 0 auto; padding: 12px 15px 20px; }
+    .screen.active { display: block; }
+    .page-header { max-width: 480px; margin: 0 auto; padding: 14px 15px 0; }
+    .page-header h1 { font-size: 19px; font-weight: 700; }
+
+    /* ── Bottom Nav ── */
+    .bottom-nav {
+      position: fixed; bottom: 0; left: 0; right: 0;
+      background: #12141f; border-top: 1px solid var(--border);
+      display: flex; z-index: 100;
+    }
+    .nav-item {
+      flex: 1; display: flex; flex-direction: column; align-items: center;
+      gap: 2px; padding: 7px 2px 11px; cursor: pointer;
+      border: none; background: none; color: var(--muted);
+      font-size: 9px; font-family: inherit; transition: color 0.2s;
+      text-decoration: none;
+    }
+    .nav-item span:first-child { font-size: 17px; }
+    .nav-item.active { color: var(--primary); }
+
+    /* ── Card ── */
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 15px; margin-bottom: 11px; }
+
+    /* ── Progress ── */
+    .progress-bar { background: var(--border); border-radius: 99px; overflow: hidden; margin-top: 8px; height: 8px; }
+    .progress-fill { height: 100%; border-radius: 99px; transition: width 0.6s ease; }
+    .fill-primary { background: var(--primary); }
+    .fill-success { background: var(--success); }
+    .fill-warning { background: var(--warning); }
+    .fill-danger  { background: var(--danger); }
+
+    /* ── Buttons ── */
+    .btn {
+      border: none; border-radius: var(--radius-sm); padding: 9px 14px;
+      font-family: inherit; font-weight: 600; font-size: 13px;
+      cursor: pointer; transition: opacity 0.15s, transform 0.1s;
+    }
+    .btn:active { transform: scale(0.97); }
+    .btn:hover { opacity: 0.85; }
+    .btn-primary { background: var(--primary); color: #fff; }
+    .btn-success { background: var(--success); color: #0f1117; }
+    .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); }
+    .btn-sm { padding: 5px 10px; font-size: 11px; }
+    .btn-full { width: 100%; display: block; text-align: center; margin-top: 8px; }
+
+    /* ── Inputs ── */
+    .input {
+      background: var(--bg); border: 1px solid var(--border);
+      border-radius: var(--radius-sm); color: var(--text);
+      font-family: inherit; font-size: 14px; padding: 8px 11px;
+      width: 100%; outline: none; transition: border-color 0.2s;
+    }
+    .input:focus { border-color: var(--primary); }
+    label { display: block; font-size: 10px; color: var(--muted); margin-bottom: 4px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+
+    /* ── Utils ── */
+    .flex-between { display: flex; justify-content: space-between; align-items: center; }
+    .flex-center   { display: flex; align-items: center; gap: 10px; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .mt-4 { margin-top: 4px; } .mt-8 { margin-top: 8px; } .mt-12 { margin-top: 12px; }
+    .text-success { color: var(--success); } .text-warning { color: var(--warning); }
+    .text-muted   { color: var(--muted); }  .text-primary { color: var(--primary); }
+    .text-sm { font-size: 13px; } .text-xs { font-size: 11px; }
+    .font-bold { font-weight: 700; } .font-semi { font-weight: 600; }
+    .section-title { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); font-weight: 700; margin: 14px 0 7px; }
+    .badge { display: inline-flex; align-items: center; gap: 3px; padding: 2px 7px; border-radius: 99px; font-size: 10px; font-weight: 700; }
+    .badge-primary { background: #2d2a5e; color: var(--primary); }
+    .badge-success { background: #0d3d33; color: var(--success); }
+    .badge-warning { background: #3d2e00; color: var(--warning); }
+    .badge-danger  { background: #3d0a1a; color: var(--danger); }
+
+    /* ── Dashboard countdown ── */
+    .countdown-card {
+      background: linear-gradient(135deg, #1e1b3a 0%, #2d2a5e 100%);
+      border: 1px solid #3d3a7e; border-radius: var(--radius);
+      padding: 26px 20px; text-align: center; margin-bottom: 11px;
+    }
+    .countdown-eyebrow { font-size: 11px; color: #a89fff; text-transform: uppercase; letter-spacing: 2px; font-weight: 700; margin-bottom: 8px; }
+    .countdown-number  { font-size: 68px; font-weight: 800; color: var(--primary); line-height: 1; }
+    .countdown-label   { font-size: 13px; color: var(--muted); margin-top: 5px; letter-spacing: 1px; text-transform: uppercase; }
+    .countdown-date    { font-size: 11px; color: #a89fff; margin-top: 6px; }
+
+    /* ── Habit card ── */
+    .habit-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 15px; margin-bottom: 10px; transition: border-color 0.2s; }
+    .habit-card.done { border-color: var(--success); background: #0d231e; }
+    .habit-detail { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); font-size: 12px; color: var(--muted); line-height: 1.5; }
+    .habit-detail strong { color: var(--text); font-weight: 600; }
+
+    /* ── Jarro card ── */
+    .jarro-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 13px; }
+    .jarro-emoji { font-size: 24px; }
+    .jarro-nome  { font-size: 12px; font-weight: 600; margin-top: 4px; line-height: 1.2; }
+    .jarro-valor { font-size: 17px; font-weight: 700; margin-top: 5px; }
+    .jarro-pct   { font-size: 10px; color: var(--muted); }
+    .eker-bar    { display: flex; gap: 6px; align-items: center; margin-top: 6px; }
+    .eker-label  { font-size: 9px; color: var(--muted); width: 28px; flex-shrink: 0; }
+    .eker-track  { flex: 1; background: var(--border); border-radius: 99px; height: 4px; overflow: hidden; }
+    .eker-fill   { height: 100%; border-radius: 99px; }
+    .chart-container { max-width: 190px; margin: 6px auto 0; }
+
+    /* ── Balde card ── */
+    .balde-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 17px; margin-bottom: 12px; }
+    .balde-item { display: flex; justify-content: space-between; font-size: 12px; padding: 5px 0; border-bottom: 1px solid var(--border); }
+    .balde-item:last-child { border-bottom: none; }
+    .min-target { display: flex; gap: 4px; align-items: center; }
+    .min-mark { width: 2px; height: 12px; background: var(--warning); border-radius: 1px; }
+
+    /* ── Timeline ── */
+    .timeline-item {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--radius); margin-bottom: 8px;
+      transition: border-color 0.2s; overflow: hidden;
+    }
+    .timeline-main { display: flex; gap: 11px; padding: 13px 14px; cursor: pointer; }
+    .timeline-main:hover { background: rgba(108,99,255,0.05); }
+    .timeline-item.concluido { border-color: var(--success); }
+    .timeline-item.concluido .timeline-main { background: #0a1f18; }
+    .timeline-item.sonho     { border-color: var(--primary); }
+    .timeline-item.sonho .timeline-main     { background: #16133a; }
+    .timeline-status { font-size: 21px; flex-shrink: 0; cursor: pointer; padding: 0 2px; }
+    .timeline-periodo { font-size: 10px; color: var(--muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+    .timeline-acao    { font-size: 13px; font-weight: 500; margin-top: 2px; line-height: 1.3; }
+    .timeline-expand  { padding: 10px 14px 13px 47px; border-top: 1px solid var(--border); background: rgba(0,0,0,0.2); font-size: 12px; color: var(--muted); line-height: 1.5; display: none; }
+    .timeline-expand.open { display: block; }
+    .timeline-expand .status-btn { margin-top: 8px; font-size: 11px; }
+
+    /* ── Metas ── */
+    .meta-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 15px; margin-bottom: 10px; }
+    .chip { padding: 3px 9px; border-radius: 99px; font-size: 11px; font-weight: 600; cursor: pointer; border: 1px solid var(--border); transition: all 0.15s; background: var(--bg); color: var(--muted); }
+    .chip.s-nao_iniciado { background: #1e2130; color: var(--muted);   border-color: var(--border); }
+    .chip.s-em_andamento { background: #2e2808; color: var(--warning); border-color: var(--warning); }
+    .chip.s-concluido    { background: #082e22; color: var(--success); border-color: var(--success); }
+    .status-chips { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 9px; }
+
+    /* ── Plano 90 dias ── */
+    .plano-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 12px; overflow: hidden; }
+    .plano-header { padding: 13px 15px; display: flex; justify-content: space-between; align-items: center; }
+    .plano-tema { font-size: 11px; color: var(--muted); margin-top: 2px; }
+    .plano-body { padding: 0 15px 13px; }
+    .plano-action {
+      display: flex; align-items: flex-start; gap: 10px;
+      padding: 8px 0; border-bottom: 1px solid var(--border);
+    }
+    .plano-action:last-child { border-bottom: none; }
+    .plano-action input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--success); margin-top: 2px; flex-shrink: 0; }
+    .plano-action label { font-size: 13px; color: var(--text); text-transform: none; letter-spacing: 0; font-weight: 400; cursor: pointer; }
+    .plano-action.done label { text-decoration: line-through; color: var(--muted); }
+    .tres-numeros { background: #16133a; border: 1px solid var(--primary); border-radius: var(--radius); padding: 13px 15px; margin-bottom: 12px; }
+    .tres-numeros li { font-size: 13px; color: var(--text); margin-top: 6px; padding-left: 4px; }
+    .tres-numeros li:first-child { margin-top: 0; }
+
+    /* ── Financeiro summary ── */
+    .fin-row { display: flex; justify-content: space-between; padding: 5px 0; font-size: 13px; border-bottom: 1px solid var(--border); }
+    .fin-row:last-child { border-bottom: none; }
+    .fin-row.total { font-weight: 700; font-size: 14px; }
+
+    /* ── Chat ── */
+    #screen-chat { padding-bottom: 165px; }
+    .chat-bubble-wrap { display: flex; margin-bottom: 10px; }
+    .chat-bubble-wrap.user      { justify-content: flex-end; }
+    .chat-bubble-wrap.assistant { justify-content: flex-start; }
+    .chat-bubble {
+      max-width: 86%; padding: 10px 13px;
+      border-radius: 16px; font-size: 14px; line-height: 1.55;
+      word-break: break-word;
+    }
+    .chat-bubble.user      { background: var(--primary); color: #fff; border-bottom-right-radius: 3px; }
+    .chat-bubble.assistant { background: var(--card); border: 1px solid var(--border); border-bottom-left-radius: 3px; }
+    .chat-bubble strong { font-weight: 700; }
+    .chat-bubble code { background: rgba(0,0,0,0.35); padding: 1px 5px; border-radius: 3px; font-size: 12px; font-family: monospace; }
+    .chat-welcome { text-align: center; padding: 24px 10px 16px; }
+
+    .typing-dots { display: flex; gap: 5px; padding: 4px 2px; }
+    .typing-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--muted); animation: bounce 1.2s infinite ease-in-out; }
+    .typing-dot:nth-child(2) { animation-delay: 0.18s; }
+    .typing-dot:nth-child(3) { animation-delay: 0.36s; }
+    @keyframes bounce { 0%,60%,100%{transform:translateY(0)} 30%{transform:translateY(-7px)} }
+
+    #chat-input-area {
+      display: none; position: fixed; bottom: 76px; left: 0; right: 0;
+      background: var(--bg); border-top: 1px solid var(--border); z-index: 98;
+    }
+    .chat-input-inner { max-width: 480px; margin: 0 auto; padding: 8px 15px 10px; }
+    .chat-shortcuts { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 8px; scrollbar-width: none; }
+    .chat-shortcuts::-webkit-scrollbar { display: none; }
+    .chat-sc { white-space: nowrap; padding: 5px 10px; background: var(--card); border: 1px solid var(--border); border-radius: 99px; font-size: 12px; cursor: pointer; color: var(--text); flex-shrink: 0; font-family: inherit; transition: border-color 0.15s; }
+    .chat-sc:hover { border-color: var(--primary); color: var(--primary); }
+    .chat-send-row { display: flex; gap: 7px; }
+    .chat-send-row .input { flex: 1; }
+    .apikey-row { margin-top: 7px; display: none; }
+    .apikey-row .add-task-row { margin-bottom: 4px; }
+    .api-key-banner { background: #1e1a08; border: 1px solid var(--warning); border-radius: var(--radius); padding: 13px 14px; margin-bottom: 12px; }
+
+    /* ── Meu Dia ── */
+    .meu-dia-label { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px; color: var(--muted); }
+    .meu-dia-block { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 13px 14px; margin-bottom: 10px; }
+    .meu-dia-block-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+
+    .task-item { display: flex; align-items: center; gap: 10px; padding: 7px 0; border-bottom: 1px solid var(--border); }
+    .task-item:last-child { border-bottom: none; }
+    .task-item.done .task-text { text-decoration: line-through; opacity: 0.4; }
+    .task-empty { font-size: 12px; color: var(--muted); padding: 6px 0 8px; font-style: italic; }
+
+    .task-cb {
+      width: 19px; height: 19px; min-width: 19px;
+      border: 2px solid var(--border); border-radius: 5px;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; font-size: 11px; font-weight: 800;
+      transition: all 0.15s; color: transparent; flex-shrink: 0;
+    }
+    .task-cb:hover { border-color: var(--success); }
+    .task-cb.checked { background: var(--success); border-color: var(--success); color: #0f1117; }
+
+    .task-text { flex: 1; font-size: 13px; line-height: 1.3; transition: opacity 0.2s; }
+    .task-del {
+      background: none; border: none; color: var(--muted); cursor: pointer;
+      font-size: 14px; padding: 0 2px; opacity: 0; transition: opacity 0.15s;
+      flex-shrink: 0; line-height: 1;
+    }
+    .task-item:hover .task-del { opacity: 0.5; }
+    .task-del:hover { opacity: 1 !important; color: var(--danger); }
+
+    .add-task-btn {
+      background: none; border: 1px dashed var(--border); border-radius: var(--radius-sm);
+      color: var(--muted); font-size: 12px; font-family: inherit; cursor: pointer;
+      padding: 6px 10px; width: 100%; margin-top: 9px;
+      transition: border-color 0.15s, color 0.15s; text-align: left;
+    }
+    .add-task-btn:hover { border-color: var(--primary); color: var(--primary); }
+
+    .add-task-row { display: flex; gap: 7px; margin-top: 9px; }
+    .add-task-row .input { flex: 1; font-size: 13px; padding: 7px 10px; }
+    .add-task-row .btn { padding: 7px 13px; font-size: 13px; flex-shrink: 0; }
+
+    .valencia-marco { padding: 8px 0; border-bottom: 1px solid rgba(108,99,255,0.25); }
+    .valencia-marco:last-child { border-bottom: none; padding-bottom: 2px; }
+    .valencia-marco-periodo { font-size: 10px; color: var(--warning); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+    .valencia-marco-acao { font-size: 13px; font-weight: 600; margin-top: 2px; line-height: 1.3; }
+    .valencia-marco-detalhe { font-size: 11px; color: var(--muted); margin-top: 3px; line-height: 1.4; }
+  </style>
+</head>
+<body>
+
+<div id="page-header" class="page-header">
+  <h1 id="page-title">🏠 Dashboard</h1>
+</div>
+
+<div id="screen-dashboard" class="screen active"></div>
+<div id="screen-jarros"    class="screen"></div>
+<div id="screen-baldes"    class="screen"></div>
+<div id="screen-habitos"   class="screen"></div>
+<div id="screen-timeline"  class="screen"></div>
+<div id="screen-metas"     class="screen"></div>
+<div id="screen-plano"     class="screen"></div>
+<div id="screen-chat"      class="screen"></div>
+
+<!-- Chat input area (fixed, shown only on chat screen) -->
+<div id="chat-input-area">
+  <div class="chat-input-inner">
+    <div class="chat-shortcuts">
+      <button class="chat-sc" onclick="quickSend('O que devo priorizar hoje no Projeto Valencia?')">📋 O que fazer hoje?</button>
+      <button class="chat-sc" onclick="quickSend('Como estão meus saldos e qual é a projeção de capital na chegada em Valencia?')">💶 Ver saldos</button>
+      <button class="chat-sc" onclick="quickSend('Qual é o próximo marco pendente do Projeto Valencia e o que preciso fazer para avançar?')">🇪🇸 Próximo marco</button>
+      <button class="chat-sc" onclick="quickSend('Como está meu streak de espanhol e o que devo fazer para manter?')">🔥 Espanhol</button>
+      <button class="chat-sc" onclick="quickSend('Quais são os itens críticos da documentação da gata para a viagem?')">🐱 Gata</button>
+    </div>
+    <div class="chat-send-row">
+      <input id="chat-inp" class="input" placeholder="Pergunte ao assistente Valencia..."
+        onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();submitChat()}">
+      <button class="btn btn-primary" onclick="submitChat()" style="padding:9px 14px;font-size:16px">↑</button>
+      <button class="btn btn-outline btn-sm" onclick="toggleApikeyRow()" title="Chave API">🔑</button>
+    </div>
+    <div id="apikey-row" class="apikey-row">
+      <div class="add-task-row">
+        <input id="inp-apikey" class="input" type="password" placeholder="sk-ant-api03-..." style="font-size:13px">
+        <button class="btn btn-success btn-sm" onclick="saveApiKey()">Salvar</button>
+      </div>
+      <div class="text-xs text-muted">Chave salva localmente no browser. Usada apenas para chamar a API Anthropic.</div>
+    </div>
+  </div>
+</div>
+
+<nav class="bottom-nav">
+  <a class="nav-item active" href="#dashboard" id="nav-dashboard"><span>🏠</span><span>Início</span></a>
+  <a class="nav-item"        href="#jarros"    id="nav-jarros"   ><span>🏺</span><span>Jarros</span></a>
+  <a class="nav-item"        href="#baldes"    id="nav-baldes"   ><span>💶</span><span>Baldes</span></a>
+  <a class="nav-item"        href="#habitos"   id="nav-habitos"  ><span>🔥</span><span>Hábitos</span></a>
+  <a class="nav-item"        href="#timeline"  id="nav-timeline" ><span>📅</span><span>Linha</span></a>
+  <a class="nav-item"        href="#metas"     id="nav-metas"    ><span>🎯</span><span>Metas</span></a>
+  <a class="nav-item"        href="#plano"     id="nav-plano"    ><span>📋</span><span>Plano</span></a>
+  <a class="nav-item"        href="#chat"      id="nav-chat"     ><span>🤖</span><span>Chat</span></a>
+</nav>
+
+<script>
+// ═══════════════════════════════════════════════════
+//  DEFAULT DATA
+// ═══════════════════════════════════════════════════
+const DEFAULT_DATA = {
+  perfil: {
+    nome: "Guilherme",
+    cidade_atual: "São José dos Campos, SP, Brasil",
+    cidade_destino: "Valencia, Espanha",
+    data_embarque_alvo: "2028-03-01",
+    ocupacao: "Operador de transmissão ao vivo (vMix)",
+    pet: "gata"
+  },
+  financeiro: {
+    renda_mensal: { guilherme: 6000, esposa: 1600, total: 7600 },
+    despesas_mensais_fixas: { moradia: 1200, alimentacao: 800, transporte: 400, contas_fixas: 450, gata: 150, total: 3000 },
+    cotacao_eur_brl: 6.5
+  },
+  seis_jarros: {
+    jarros: [
+      { id: "NEC", emoji: "🏠", nome: "Necessidades",         percentual_eker: 0.55, percentual: 0.42, valor_mensal: 3192, alimenta_balde: null, instrucao: null },
+      { id: "LIB", emoji: "💎", nome: "Liberdade Financeira", percentual_eker: 0.10, percentual: 0.26, valor_mensal: 1976, alimenta_balde: "EUROS",     instrucao: "Transferir para Wise no dia do pagamento. Não tocar." },
+      { id: "EDU", emoji: "📚", nome: "Educação",             percentual_eker: 0.10, percentual: 0.05, valor_mensal: 380,  alimenta_balde: null,         instrucao: "Espanhol, cursos vMix, livros técnicos." },
+      { id: "DIV", emoji: "🎉", nome: "Diversão",             percentual_eker: 0.10, percentual: 0.05, valor_mensal: 380,  alimenta_balde: null,         instrucao: "⚠️ Respeitar o limite. Não extrapolar." },
+      { id: "POU", emoji: "🐷", nome: "Poupança / Sonho",     percentual_eker: 0.10, percentual: 0.19, valor_mensal: 1444, alimenta_balde: "VIAGEM",     instrucao: "Tesouro Selic. Resgatar apenas em jan/2028." },
+      { id: "DOA", emoji: "❤️", nome: "Doação / Reserva",     percentual_eker: 0.05, percentual: 0.03, valor_mensal: 228,  alimenta_balde: "EMERGENCIA", instrucao: "Complemento da reserva de emergência." }
+    ]
+  },
+  baldes_valencia: {
+    balde_euros: {
+      id: "EUROS", emoji: "💶", nome: "Balde Euros", onde: "Wise",
+      aporte_mensal: 1976, saldo_atual: 76, meta: 12000, moeda: "EUR",
+      instrucao: "Comprar euros todo dia de pagamento via Wise. Não converter de volta."
+    },
+    balde_viagem: {
+      id: "VIAGEM", emoji: "✈️", nome: "Balde Viagem / Mudança", onde: "Tesouro Selic",
+      aporte_mensal: 1444, saldo_atual: 0, meta: 14550, moeda: "BRL",
+      instrucao: "Resgatar apenas em jan/2028 para pagar mudança.",
+      itens_cobertos: [
+        { item: "Passagens aéreas casal",            valor: 9000  },
+        { item: "Gata (microchip, vacinas, taxa pet)",valor: 2700  },
+        { item: "Bagagens extras",                   valor: 1000  },
+        { item: "Casamento cartório",                valor: 1500  },
+        { item: "Passaporte Guilherme",              valor: 350   }
+      ]
+    },
+    balde_emergencia: {
+      id: "EMERGENCIA", emoji: "🛡️", nome: "Reserva de Emergência", onde: "CDB liquidez diária",
+      aporte_mensal: 228, saldo_atual: 11000, meta_minima: 9600, meta: 19200, moeda: "BRL",
+      instrucao: "Não tocar. Só usar em emergência real."
+    }
+  },
+  habitos: {
+    lista: [
+      {
+        id: "espanhol",   emoji: "🇪🇸", nome: "Espanhol — Duolingo",
+        frequencia: "diario",  streak_atual: 0, meta_streak: 365, ultima_data: null,
+        gatilho: "Deitar na cama à noite",
+        rotina: "1 lição no Duolingo — 10 minutos",
+        recompensa: "Streak visível — barra de XP"
+      },
+      {
+        id: "financeiro", emoji: "💰", nome: "Revisão financeira semanal",
+        frequencia: "semanal", streak_atual: 0, meta_streak: 52,  ultima_semana: null,
+        gatilho: "Primeiro dia livre da semana à noite",
+        rotina: "15 min — extrato + transferir jarros LIB e POU",
+        recompensa: "Ver os baldes crescendo no app",
+        dia_preferido: "segunda ou terça"
+      },
+      {
+        id: "valencia",   emoji: "✨", nome: "Ritual Valencia — casal",
+        frequencia: "semanal", streak_atual: 0, meta_streak: 52,  ultima_semana: null,
+        gatilho: "Após revisão financeira semanal",
+        rotina: "15 min — painel Valencia com esposa (visual, sem conversa longa)",
+        recompensa: "Countdown diminuindo, euros acumulando"
+      }
+    ]
+  },
+  metas: [
+    { id: "capital_chegada",      emoji: "🇪🇸", nome: "Capital na chegada em Valencia",   valor_alvo: 12000, moeda: "EUR", prazo: "2028-03-01", valor_atual: 76,    status: "em_andamento" },
+    { id: "balde_viagem_meta",    emoji: "✈️",  nome: "Balde Viagem / Mudança",          valor_alvo: 14550, moeda: "BRL", prazo: "2028-01-01", valor_atual: 0,     status: "em_andamento" },
+    { id: "espanhol_b2",          emoji: "📖",  nome: "Espanhol nível B2",               valor_alvo: null,  moeda: null,  prazo: "2027-12-31", valor_atual: null,  status: "em_andamento" },
+    { id: "primeiro_freela_euro", emoji: "🎯",  nome: "Primeiro freela em euro (Upwork)",valor_alvo: null,  moeda: "EUR", prazo: "2027-06-30", valor_atual: null,  status: "nao_iniciado" },
+    { id: "reserva_6meses",       emoji: "🛡️", nome: "Reserva emergência 6 meses",      valor_alvo: 19200, moeda: "BRL", prazo: "2026-12-31", valor_atual: 11000, status: "em_andamento" }
+  ],
+  linha_do_tempo: [
+    { periodo: "Jun/2026", acao: "Iniciar streak Duolingo — hoje",                          detalhe: "1 lição na cama antes de dormir. Não pode zerar.",                                                                                    status: "pendente" },
+    { periodo: "Jun/2026", acao: "Agendar passaporte na Polícia Federal",                   detalhe: "Site: agendamento.serpro.gov.br — 10 minutos para agendar.",                                                                          status: "pendente" },
+    { periodo: "Jun/2026", acao: "2ª quarta: primeira transferência Wise + Tesouro Selic",  detalhe: "Dia de pagamento. Transferir antes de qualquer gasto. O hábito começa aqui.",                                                         status: "pendente" },
+    { periodo: "Jun/2026", acao: "Casamento no cartório",                                   detalhe: "Base legal para Arraigo Familiar e cidadania em 1 ano. Sem data definida ainda.",                                                     status: "pendente" },
+    { periodo: "Jun/2026", acao: "Testar o app e atualizar saldo real da Wise",             detalhe: "Abrir index.html, atualizar saldo real da Wise e fazer primeira revisão visual.",                                                      status: "pendente" },
+    { periodo: "Jul/2026", acao: "🐱 Gata: microchip ISO 11784 + vacina antirrábica",       detalhe: "OBRIGATÓRIO: microchip antes ou no mesmo dia da vacina. Usar vet experiente em documentação UE. Pedir indicação de laboratório credenciado pela UE para sorologia em 2027.", status: "pendente" },
+    { periodo: "Jul/2026", acao: "Tirar passaporte (se agendado em junho)",                 detalhe: "R$350. Válido por 10 anos.",                                                                                                          status: "pendente" },
+    { periodo: "Jul/2026", acao: "Primeiro ritual financeiro semanal com a esposa",         detalhe: "Primeiro dia livre da semana à noite. 15 min financeiro + 15 min painel Valencia.",                                                   status: "pendente" },
+    { periodo: "Ago/2026", acao: "60 dias de streak no Duolingo — marco 🎉",                detalhe: "Comemorar. Prova de que o hábito está instalado.",                                                                                     status: "pendente" },
+    { periodo: "Ago/2026", acao: "Criar perfil no Upwork (streaming/produção audiovisual)", detalhe: "Primeiro passo para renda em euro antes da chegada.",                                                                                  status: "pendente" },
+    { periodo: "Out/2026", acao: "Comprar passagens aéreas (TAP ou Iberia — aceitam pets)", detalhe: "Confirmar política pet antes de comprar. Reservar taxa de transporte da gata.",                                                       status: "pendente" },
+    { periodo: "Nov/2026", acao: "Ter pelo menos 1 cliente remoto ativo (Upwork)",          detalhe: "Qualquer valor em euro já valida o modelo.",                                                                                           status: "pendente" },
+    { periodo: "Nov-Dez/2026", acao: "Definir apartamento em Valencia remotamente",         detalhe: "Idealista, Fotocasa. Foco em Russafa, L'Eixample ou Patraix. Evitar contrato de temporada.",                                         status: "pendente" },
+    { periodo: "Nov/2027", acao: "🐱 Gata: vacina antirrábica de reforço",                  detalhe: "Confirmar validade da vacina aplicada em jul/2026. Reforço deve ser aplicado antes da sorologia.",                                   status: "pendente" },
+    { periodo: "Dez/2027", acao: "🐱 Gata: sorologia antirrábica — PRAZO CRÍTICO ⚠️",       detalhe: "Coleta deve ocorrer 3 meses antes do embarque (março/2028). Laboratório credenciado pela UE — verificar agenda com antecedência.",    status: "pendente" },
+    { periodo: "Jan/2028", acao: "Resgatar Tesouro Selic (balde viagem)",                   detalhe: "Usar para pagar custos da mudança: passagens, gata, bagagem, documentação.",                                                           status: "pendente" },
+    { periodo: "Mar/2028", acao: "🐱 Gata: CVI emitido pelo MAPA",                          detalhe: "Emitir nos 10 dias anteriores ao embarque. Válido apenas até a chegada na UE.",                                                       status: "pendente" },
+    { periodo: "Mar/2028", acao: "✈️ EMBARQUE — Valencia, Espanha",                         detalhe: "Primavera europeia. Capital alvo: €12.000.",                                                                                           status: "sonho"    },
+    { periodo: "Jun/2028", acao: "Solicitar Arraigo Familiar",                              detalhe: "Dentro de 3 meses da chegada. Base: casamento com cônjuge espanhola.",                                                                status: "sonho"    },
+    { periodo: "Mar/2029", acao: "Solicitar cidadania espanhola 🇪🇸",                        detalhe: "1 ano de residência com cônjuge espanhol. Passaporte europeu após aprovação.",                                                        status: "sonho"    }
+  ],
+  plano_90_dias: {
+    dia_pagamento: "2ª quarta do mês",
+    meses: [
+      {
+        mes: "Junho/2026", tema: "Fundação",
+        acoes: [
+          "Iniciar streak Duolingo hoje à noite",
+          "Agendar passaporte na PF (agendamento.serpro.gov.br)",
+          "2ª quarta: transferir Wise + Tesouro Selic no dia do pagamento",
+          "Testar o app — atualizar saldo real"
+        ],
+        concluidas: []
+      },
+      {
+        mes: "Julho/2026", tema: "Gata + hábito financeiro consolidando",
+        acoes: [
+          "Veterinário: microchip ISO 11784 + vacina antirrábica (mesma visita)",
+          "Tirar passaporte (se agendado em junho)",
+          "2ª quarta: segundo ciclo Wise + Tesouro Selic",
+          "Primeiro ritual semanal com a esposa no app"
+        ],
+        concluidas: []
+      },
+      {
+        mes: "Agosto/2026", tema: "Consolidação + primeiro passo profissional",
+        acoes: [
+          "60 dias de streak — comemorar 🎉",
+          "Criar perfil no Upwork",
+          "2ª quarta: terceiro ciclo — atualizar cotação no app",
+          "Ritual semanal rodando há 4 semanas"
+        ],
+        concluidas: []
+      }
+    ],
+    tres_numeros: [
+      "🔥 Streak do espanhol — não pode zerar",
+      "💶 Saldo em euros na Wise — cresce toda 2ª quarta",
+      "🐷 Saldo no Tesouro Selic — cresce toda 2ª quarta"
+    ]
+  },
+  tarefas: {
+    hoje: [],
+    semana: [],
+    ultima_data: null,
+    ultima_semana: null
+  }
+};
+
+// ═══════════════════════════════════════════════════
+//  PERSISTENCE
+// ═══════════════════════════════════════════════════
+const KEY = 'valencia_app_data_v2';
+let D = {};
+
+function load() {
+  try {
+    const s = localStorage.getItem(KEY);
+    D = s ? JSON.parse(s) : JSON.parse(JSON.stringify(DEFAULT_DATA));
+  } catch(e) {
+    D = JSON.parse(JSON.stringify(DEFAULT_DATA));
+  }
+  if (!localStorage.getItem(KEY)) save();
+
+  // Garantir que tarefas existe (migração)
+  if (!D.tarefas) D.tarefas = { hoje: [], semana: [], ultima_data: null, ultima_semana: null };
+
+  // Auto-limpar tarefas de hoje ao virar o dia
+  const td = new Date().toISOString().slice(0,10);
+  if (D.tarefas.ultima_data !== td) {
+    D.tarefas.hoje = [];
+    D.tarefas.ultima_data = td;
+    save();
+  }
+
+  // Auto-limpar tarefas da semana toda segunda-feira
+  const now = new Date();
+  const dow = now.getDay(); // 0=dom, 1=seg
+  const weekStart = new Date(now);
+  weekStart.setDate(now.getDate() - (dow === 0 ? 6 : dow - 1));
+  const weekKey = weekStart.toISOString().slice(0,10);
+  if (D.tarefas.ultima_semana !== weekKey) {
+    D.tarefas.semana = [];
+    D.tarefas.ultima_semana = weekKey;
+    save();
+  }
+}
+
+function save() { localStorage.setItem(KEY, JSON.stringify(D)); }
+
+function exportJSON() {
+  const blob = new Blob([JSON.stringify(D, null, 2)], { type: 'application/json' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href = url;
+  a.download = `valencia_backup_${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ═══════════════════════════════════════════════════
+//  UTILS
+// ═══════════════════════════════════════════════════
+function fmtBRL(v) { return 'R$ ' + Number(v).toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 }); }
+function fmtEUR(v) { return '€' + Number(v).toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 }); }
+function fmtCur(v, m) { return m === 'EUR' ? fmtEUR(v) : fmtBRL(v); }
+
+function daysLeft(dateStr) {
+  const t = new Date(dateStr + 'T00:00:00');
+  const n = new Date(); n.setHours(0,0,0,0);
+  return Math.ceil((t - n) / 86400000);
+}
+
+function fmtDate(s) {
+  const [y,m,d] = s.split('-');
+  const mo = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+  return `${d}/${mo[+m-1]}/${y}`;
+}
+
+function isoWeek(date) {
+  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+  const day = d.getUTCDay() || 7;
+  d.setUTCDate(d.getUTCDate() + 4 - day);
+  const y1 = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+  return `${d.getUTCFullYear()}-W${Math.ceil(((d - y1) / 86400000 + 1) / 7)}`;
+}
+
+function todayStr()  { return new Date().toISOString().slice(0,10); }
+function thisWeek()  { return isoWeek(new Date()); }
+
+function pct(cur, total) {
+  if (!total) return 0;
+  return Math.min(100, Math.round((cur / total) * 100));
+}
+
+function fillClass(p) {
+  if (p >= 80) return 'fill-success';
+  if (p >= 40) return 'fill-primary';
+  return 'fill-warning';
+}
+
+function progBar(p, h) {
+  return `<div class="progress-bar" style="height:${h||8}px"><div class="progress-fill ${fillClass(p)}" style="width:${p}%"></div></div>`;
+}
+
+function mesesAteMeta(saldo, aporteLocal, meta) {
+  const falta = meta - saldo;
+  if (falta <= 0) return 0;
+  if (!aporteLocal) return null;
+  return Math.ceil(falta / aporteLocal);
+}
+
+// ═══════════════════════════════════════════════════
+//  ROUTER
+// ═══════════════════════════════════════════════════
+const ROUTES = {
+  dashboard: { title: '🏠 Dashboard',       render: renderDashboard },
+  jarros:    { title: '🏺 Jarros',           render: renderJarros    },
+  baldes:    { title: '💶 Baldes Valencia',  render: renderBaldes    },
+  habitos:   { title: '🔥 Hábitos',          render: renderHabitos   },
+  timeline:  { title: '📅 Linha do Tempo',   render: renderTimeline  },
+  metas:     { title: '🎯 Metas',            render: renderMetas     },
+  plano:     { title: '📋 Plano 90 Dias',    render: renderPlano     },
+  chat:      { title: '🤖 Assistente',       render: renderChat      }
+};
+let chart = null;
+let expandedItems = new Set();
+let chatHistory = [];
+
+function route() {
+  const id = (location.hash || '#dashboard').replace('#','');
+  const r  = ROUTES[id] || ROUTES.dashboard;
+  const sid = ROUTES[id] ? id : 'dashboard';
+  if (chart && sid !== 'jarros') { chart.destroy(); chart = null; }
+  document.querySelectorAll('.screen').forEach(el => el.classList.remove('active'));
+  document.getElementById('screen-' + sid).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+  const nav = document.getElementById('nav-' + sid);
+  if (nav) nav.classList.add('active');
+  document.getElementById('page-title').textContent = r.title;
+  const cia = document.getElementById('chat-input-area');
+  if (cia) cia.style.display = sid === 'chat' ? 'block' : 'none';
+  r.render();
+}
+
+// ═══════════════════════════════════════════════════
+//  DASHBOARD
+// ═══════════════════════════════════════════════════
+function renderDashboard() {
+  const el   = document.getElementById('screen-dashboard');
+  const days = daysLeft(D.perfil.data_embarque_alvo);
+  const td   = todayStr();
+  const tw   = thisWeek();
+  const { balde_euros: euros, balde_viagem: viagem } = D.baldes_valencia;
+  const habList = D.habitos.lista || D.habitos;
+  const pe = pct(euros.saldo_atual, euros.meta);
+  const pv = pct(viagem.saldo_atual, viagem.meta);
+
+  const habitosHtml = habList.map(h => {
+    const done = h.frequencia === 'diario' ? h.ultima_data === td : h.ultima_semana === tw;
+    return `
+    <div class="habit-card${done ? ' done' : ''}">
+      <div class="flex-between">
+        <div class="flex-center">
+          <span style="font-size:22px">${h.emoji}</span>
+          <div>
+            <div class="font-semi" style="font-size:14px">${h.nome}</div>
+            <div class="text-xs" style="color:var(--warning)">🔥 ${h.streak_atual} ${h.frequencia === 'diario' ? 'dias' : 'semanas'}</div>
+          </div>
+        </div>
+        <button class="btn btn-sm ${done ? 'btn-outline' : 'btn-success'}"
+          style="${done ? 'color:var(--success);border-color:var(--success)' : ''}"
+          onclick="toggleHabito('${h.id}')">
+          ${done ? '✅' : '⭕'}
+        </button>
+      </div>
+    </div>`;
+  }).join('');
+
+  // Proximo item urgente da linha do tempo
+  const proxItem = D.linha_do_tempo.find(i => i.status === 'pendente');
+
+  el.innerHTML = `
+    <div class="countdown-card">
+      <div class="countdown-eyebrow">🇪🇸 Valencia, Espanha</div>
+      <div class="countdown-number">${days}</div>
+      <div class="countdown-label">dias para o embarque</div>
+      <div class="countdown-date">01 de março de 2028</div>
+    </div>
+
+    ${proxItem ? `
+    <div class="card" style="border-color:var(--warning);background:#1e1a08">
+      <div class="text-xs" style="color:var(--warning);font-weight:700;margin-bottom:4px">⏭️ PRÓXIMO PASSO</div>
+      <div class="font-semi" style="font-size:14px">${proxItem.acao}</div>
+      <div class="text-xs text-muted mt-4">${proxItem.periodo}</div>
+    </div>` : ''}
+
+    <div class="section-title">Acumulação</div>
+    <div class="card">
+      <div class="flex-between" style="margin-bottom:10px">
+        <div class="flex-center">
+          <span style="font-size:22px">${euros.emoji}</span>
+          <div>
+            <div class="text-sm font-semi">${euros.nome}</div>
+            <div style="font-size:21px;font-weight:800;color:var(--success)">${fmtEUR(euros.saldo_atual)}</div>
+          </div>
+        </div>
+        <div style="text-align:right">
+          <div class="text-xs text-muted">meta</div>
+          <div class="font-semi">${fmtEUR(euros.meta)}</div>
+          <div class="text-xs text-muted">${pe}%</div>
+        </div>
+      </div>
+      ${progBar(pe, 10)}
+    </div>
+
+    <div class="card">
+      <div class="flex-between" style="margin-bottom:10px">
+        <div class="flex-center">
+          <span style="font-size:22px">${viagem.emoji}</span>
+          <div>
+            <div class="text-sm font-semi">${viagem.nome}</div>
+            <div style="font-size:21px;font-weight:800;color:var(--warning)">${fmtBRL(viagem.saldo_atual)}</div>
+          </div>
+        </div>
+        <div style="text-align:right">
+          <div class="text-xs text-muted">meta</div>
+          <div class="font-semi">${fmtBRL(viagem.meta)}</div>
+          <div class="text-xs text-muted">${pv}%</div>
+        </div>
+      </div>
+      ${progBar(pv, 10)}
+    </div>
+
+    <div class="section-title">Hábitos de hoje</div>
+    ${habitosHtml}
+
+    <div class="section-title">📋 Meu Dia</div>
+    ${renderMeuDia()}
+
+    <div class="section-title">Navegação</div>
+    <div class="grid-2">
+      <a href="#plano"    class="btn btn-primary" style="text-decoration:none;padding:12px;text-align:center">📋 Plano 90 Dias</a>
+      <a href="#baldes"   class="btn btn-outline"  style="text-decoration:none;padding:12px;text-align:center">💶 Baldes</a>
+      <a href="#timeline" class="btn btn-outline"  style="text-decoration:none;padding:12px;text-align:center">📅 Linha do Tempo</a>
+      <a href="#metas"    class="btn btn-outline"  style="text-decoration:none;padding:12px;text-align:center">🎯 Metas</a>
+    </div>
+  `;
+}
+
+// ═══════════════════════════════════════════════════
+//  JARROS
+// ═══════════════════════════════════════════════════
+const JARRO_COLORS = ['#ef476f','#6c63ff','#00b4d8','#00d4aa','#ffd166','#ff9f43'];
+const BALDE_LABELS = { EUROS: '💶 Balde Euros', VIAGEM: '✈️ Balde Viagem', EMERGENCIA: '🛡️ Emergência' };
+
+function renderJarros() {
+  const el   = document.getElementById('screen-jarros');
+  const fin  = D.financeiro;
+  const jarros = D.seis_jarros.jarros;
+  const totalEUR = (fin.renda_mensal.total / fin.cotacao_eur_brl).toFixed(0);
+
+  const cards = jarros.map((j, i) => {
+    const badge = j.alimenta_balde
+      ? `<div class="badge badge-primary mt-4">↗ ${BALDE_LABELS[j.alimenta_balde]}</div>` : '';
+    const ekerPct  = Math.round(j.percentual_eker * 100);
+    const meuPct   = Math.round(j.percentual * 100);
+    const instrucao = j.instrucao ? `<div class="text-xs text-muted mt-4" style="border-top:1px solid var(--border);padding-top:6px;margin-top:6px">${j.instrucao}</div>` : '';
+    return `
+    <div class="jarro-card" style="border-top:3px solid ${JARRO_COLORS[i]}">
+      <div class="jarro-emoji">${j.emoji}</div>
+      <div class="jarro-nome">${j.nome}</div>
+      <div class="jarro-valor">${fmtBRL(j.valor_mensal)}</div>
+      <div class="jarro-pct">${meuPct}% da renda</div>
+      <div class="eker-bar"><span class="eker-label">Meu</span><div class="eker-track"><div class="eker-fill fill-primary" style="width:${meuPct*2}%"></div></div></div>
+      <div class="eker-bar"><span class="eker-label">Eker</span><div class="eker-track"><div class="eker-fill" style="width:${ekerPct*2}%;background:var(--muted)"></div></div></div>
+      ${badge}${instrucao}
+    </div>`;
+  }).join('');
+
+  el.innerHTML = `
+    <div class="card">
+      <div class="text-xs text-muted font-semi" style="margin-bottom:8px">RENDA MENSAL</div>
+      <div class="fin-row"><span>Guilherme</span><span class="font-semi">${fmtBRL(fin.renda_mensal.guilherme)}</span></div>
+      <div class="fin-row"><span>Esposa</span><span class="font-semi">${fmtBRL(fin.renda_mensal.esposa)}</span></div>
+      <div class="fin-row total"><span>Total</span><span style="color:var(--success)">${fmtBRL(fin.renda_mensal.total)}</span></div>
+      <div class="grid-2" style="margin-top:10px">
+        <div>
+          <label>Renda total (R$)</label>
+          <input class="input" type="number" value="${fin.renda_mensal.total}" onchange="updateRenda(this.value)">
+        </div>
+        <div>
+          <label>Cotação €/R$</label>
+          <input class="input" type="number" step="0.01" value="${fin.cotacao_eur_brl}" onchange="updateCotacao(this.value)">
+        </div>
+      </div>
+      <div class="text-xs text-muted" style="text-align:center;margin-top:6px">
+        ${fmtBRL(fin.renda_mensal.total)} ≈ ${fmtEUR(totalEUR)} ao câmbio de R$${fin.cotacao_eur_brl}/€
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="text-xs text-muted font-semi" style="text-align:center;margin-bottom:2px">Distribuição dos Jarros</div>
+      <div class="chart-container"><canvas id="donut-chart"></canvas></div>
+    </div>
+
+    <div class="grid-2">${cards}</div>
+  `;
+
+  setTimeout(() => {
+    const ctx = document.getElementById('donut-chart');
+    if (!ctx) return;
+    if (chart) chart.destroy();
+    chart = new Chart(ctx, {
+      type: 'doughnut',
+      data: {
+        labels: jarros.map(j => j.nome),
+        datasets: [{ data: jarros.map(j => Math.round(j.percentual*100)), backgroundColor: JARRO_COLORS, borderWidth: 2, borderColor: '#1a1d2e' }]
+      },
+      options: {
+        cutout: '62%',
+        plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => ` ${c.label}: ${c.raw}%` } } }
+      }
+    });
+  }, 50);
+}
+
+function updateRenda(v) {
+  const r = parseFloat(v) || 0;
+  D.financeiro.renda_mensal.total = r;
+  D.seis_jarros.jarros.forEach(j => { j.valor_mensal = Math.round(j.percentual * r); });
+  save(); renderJarros();
+}
+function updateCotacao(v) {
+  D.financeiro.cotacao_eur_brl = parseFloat(v) || 6.5;
+  save(); renderJarros();
+}
+
+// ═══════════════════════════════════════════════════
+//  BALDES
+// ═══════════════════════════════════════════════════
+function renderBaldes() {
+  const el  = document.getElementById('screen-baldes');
+  const cx  = D.financeiro.cotacao_eur_brl;
+  const b   = D.baldes_valencia;
+  const diasR  = daysLeft(D.perfil.data_embarque_alvo);
+  const mesesR = Math.max(0, Math.ceil(diasR / 30));
+  const eurosProj = b.balde_euros.saldo_atual + (b.balde_euros.aporte_mensal / cx) * mesesR;
+
+  const baldes = [b.balde_euros, b.balde_viagem, b.balde_emergencia];
+
+  const cards = baldes.map(bd => {
+    const isEUR = bd.moeda === 'EUR';
+    const aporteLocal = isEUR ? bd.aporte_mensal / cx : bd.aporte_mensal;
+    const metaDisplay = bd.meta;
+    const p = pct(bd.saldo_atual, metaDisplay);
+    const meses = mesesAteMeta(bd.saldo_atual, aporteLocal, metaDisplay);
+    const fmtS = isEUR ? fmtEUR(bd.saldo_atual) : fmtBRL(bd.saldo_atual);
+    const fmtM = isEUR ? fmtEUR(metaDisplay)     : fmtBRL(metaDisplay);
+    const aporteStr = isEUR
+      ? `${fmtBRL(bd.aporte_mensal)}/mês ≈ ${fmtEUR(Math.round(aporteLocal))}`
+      : `${fmtBRL(bd.aporte_mensal)}/mês`;
+    const projText = meses === 0 ? '✅ Meta atingida!'
+      : meses != null ? `⏱️ Meta em ~${meses} meses` : '';
+
+    // Extra: itens cobertos (viagem)
+    const itensHtml = bd.itens_cobertos ? `
+      <div class="text-xs text-muted font-semi" style="margin:12px 0 4px;text-transform:uppercase;letter-spacing:.5px">Itens cobertos</div>
+      ${bd.itens_cobertos.map(it => `
+        <div class="balde-item">
+          <span>${it.item}</span>
+          <span class="font-semi">${fmtBRL(it.valor)}</span>
+        </div>`).join('')}
+    ` : '';
+
+    // Extra: meta mínima (emergencia)
+    const minHtml = bd.meta_minima ? (() => {
+      const pm = pct(bd.saldo_atual, bd.meta_minima);
+      const atingiu = bd.saldo_atual >= bd.meta_minima;
+      return `<div class="min-target mt-8"><div class="min-mark"></div><div class="text-xs text-muted">Meta mínima ${fmtBRL(bd.meta_minima)}: <span style="color:${atingiu ? 'var(--success)' : 'var(--warning)'}; font-weight:600">${atingiu ? '✅ Atingida' : pct(bd.saldo_atual,bd.meta_minima)+'%'}</span></div></div>`;
+    })() : '';
+
+    return `
+    <div class="balde-card">
+      <div class="flex-between" style="margin-bottom:12px">
+        <div class="flex-center">
+          <span style="font-size:30px">${bd.emoji}</span>
+          <div>
+            <div class="font-semi">${bd.nome}</div>
+            <div class="text-xs text-muted mt-4">📍 ${bd.onde}</div>
+            <div class="text-xs text-muted">${aporteStr}</div>
+          </div>
+        </div>
+        <div style="text-align:right">
+          <div class="text-xs text-muted">meta</div>
+          <div class="font-semi">${fmtM}</div>
+        </div>
+      </div>
+      <div>
+        <label>Saldo atual (${bd.moeda})</label>
+        <input class="input" type="number" value="${bd.saldo_atual}"
+          style="font-size:19px;font-weight:700;color:var(--success)"
+          onchange="updateBaldeSaldo('${bd.id}', this.value)">
+      </div>
+      ${progBar(p, 10)}
+      <div class="flex-between mt-4">
+        <span class="text-xs text-muted">${p}% atingido</span>
+        <span class="text-xs" style="color:var(--warning)">${projText}</span>
+      </div>
+      ${minHtml}
+      ${itensHtml}
+      ${bd.instrucao ? `<div class="text-xs text-muted" style="margin-top:10px;padding-top:8px;border-top:1px solid var(--border)">💡 ${bd.instrucao}</div>` : ''}
+    </div>`;
+  }).join('');
+
+  el.innerHTML = `
+    ${cards}
+    <div class="card" style="background:linear-gradient(135deg,#0d231e,#1a2e25);border-color:var(--success)">
+      <div class="text-sm font-semi" style="color:var(--success)">📊 Capital projetado na chegada</div>
+      <div style="font-size:30px;font-weight:800;color:var(--success);margin:8px 0">${fmtEUR(Math.round(eurosProj))}</div>
+      <div class="text-xs text-muted">${mesesR} meses · câmbio R$${cx}/€ · aporte ${fmtBRL(b.balde_euros.aporte_mensal)}/mês</div>
+    </div>
+    <button class="btn btn-outline btn-full" onclick="exportJSON()">📥 Exportar dados (backup JSON)</button>
+  `;
+}
+
+function updateBaldeSaldo(id, v) {
+  const val = parseFloat(v) || 0;
+  const b = D.baldes_valencia;
+  if (id === 'EUROS')      b.balde_euros.saldo_atual      = val;
+  if (id === 'VIAGEM')     b.balde_viagem.saldo_atual     = val;
+  if (id === 'EMERGENCIA') b.balde_emergencia.saldo_atual = val;
+  // sync metas
+  if (id === 'EUROS')  { const m = D.metas.find(m => m.id === 'capital_chegada');   if (m) m.valor_atual = val; }
+  if (id === 'VIAGEM') { const m = D.metas.find(m => m.id === 'balde_viagem_meta'); if (m) m.valor_atual = val; }
+  if (id === 'EMERGENCIA') { const m = D.metas.find(m => m.id === 'reserva_6meses'); if (m) m.valor_atual = val; }
+  save();
+}
+
+// ═══════════════════════════════════════════════════
+//  HÁBITOS
+// ═══════════════════════════════════════════════════
+function renderHabitos() {
+  const el = document.getElementById('screen-habitos');
+  const td = todayStr();
+  const tw = thisWeek();
+  const habList = D.habitos.lista || D.habitos;
+
+  el.innerHTML = habList.map(h => {
+    const done = h.frequencia === 'diario' ? h.ultima_data === td : h.ultima_semana === tw;
+    const p    = pct(h.streak_atual, h.meta_streak);
+    const unit = h.frequencia === 'diario' ? 'dias' : 'semanas';
+    const detalhe = [
+      h.gatilho   ? `<strong>Gatilho:</strong> ${h.gatilho}` : '',
+      h.rotina    ? `<strong>Rotina:</strong> ${h.rotina}` : '',
+      h.recompensa ? `<strong>Recompensa:</strong> ${h.recompensa}` : '',
+      h.dia_preferido ? `<strong>Dia preferido:</strong> ${h.dia_preferido}` : ''
+    ].filter(Boolean).join('<br>');
+
+    return `
+    <div class="habit-card${done ? ' done' : ''}">
+      <div class="flex-between" style="margin-bottom:11px">
+        <div class="flex-center">
+          <span style="font-size:32px">${h.emoji}</span>
+          <div>
+            <div style="font-size:15px" class="font-semi">${h.nome}</div>
+            <div class="text-xs text-muted mt-4">${h.frequencia === 'diario' ? 'Diário' : 'Semanal'} · meta ${h.meta_streak} ${unit}</div>
+          </div>
+        </div>
+        <div style="text-align:center">
+          <div style="font-size:26px;line-height:1">🔥</div>
+          <div style="font-size:19px;font-weight:800;color:var(--warning)">${h.streak_atual}</div>
+          <div class="text-xs text-muted">${unit}</div>
+        </div>
+      </div>
+      ${progBar(p, 7)}
+      <div class="flex-between mt-4" style="margin-bottom:11px">
+        <span class="text-xs text-muted">${h.streak_atual} / ${h.meta_streak} ${unit}</span>
+        <span class="text-xs text-muted">${p}%</span>
+      </div>
+      ${detalhe ? `<div class="habit-detail">${detalhe}</div>` : ''}
+      <button class="btn btn-full ${done ? 'btn-outline' : 'btn-success'}"
+        style="margin-top:10px;${done ? 'color:var(--success);border-color:var(--success)' : ''}"
+        onclick="toggleHabito('${h.id}')">
+        ${done
+          ? '✅ Concluído — toque para desmarcar'
+          : h.frequencia === 'diario' ? '⭕ Marcar como feito hoje' : '⭕ Marcar como feito esta semana'}
+      </button>
+    </div>`;
+  }).join('') + `<button class="btn btn-outline btn-full" style="margin-top:8px" onclick="exportJSON()">📥 Exportar dados (backup JSON)</button>`;
+}
+
+function toggleHabito(id) {
+  const td = todayStr();
+  const tw = thisWeek();
+  const habList = D.habitos.lista || D.habitos;
+  const h = habList.find(x => x.id === id);
+  if (!h) return;
+  if (h.frequencia === 'diario') {
+    if (h.ultima_data === td) { h.ultima_data = null; h.streak_atual = Math.max(0, h.streak_atual - 1); }
+    else { h.ultima_data = td; h.streak_atual += 1; }
+  } else {
+    if (h.ultima_semana === tw) { h.ultima_semana = null; h.streak_atual = Math.max(0, h.streak_atual - 1); }
+    else { h.ultima_semana = tw; h.streak_atual += 1; }
+  }
+  save();
+  const sid = (location.hash || '#dashboard').replace('#','');
+  if (sid === 'dashboard') renderDashboard();
+  else renderHabitos();
+}
+
+// ═══════════════════════════════════════════════════
+//  LINHA DO TEMPO
+// ═══════════════════════════════════════════════════
+const STATUS_CYCLE = { pendente: 'concluido', concluido: 'sonho', sonho: 'pendente' };
+const STATUS_ICON  = { pendente: '⏳', concluido: '✅', sonho: '✨' };
+const STATUS_NEXT_LABEL = { pendente: 'Marcar concluído', concluido: 'Marcar como sonho', sonho: 'Voltar a pendente' };
+
+function renderTimeline() {
+  const el = document.getElementById('screen-timeline');
+  el.innerHTML = `
+    <div class="text-xs text-muted" style="text-align:center;margin-bottom:12px">Toque para expandir · Botão de status para alternar</div>
+    ${D.linha_do_tempo.map((item, i) => {
+      const isOpen = expandedItems.has(i);
+      return `
+      <div class="timeline-item ${item.status}">
+        <div class="timeline-main" onclick="toggleExpand(${i})">
+          <div class="timeline-status" onclick="event.stopPropagation(); cycleStatus(${i})"
+            title="${STATUS_NEXT_LABEL[item.status]}">${STATUS_ICON[item.status] || '⏳'}</div>
+          <div style="flex:1">
+            <div class="timeline-periodo">${item.periodo}</div>
+            <div class="timeline-acao">${item.acao}</div>
+          </div>
+          <div class="text-xs text-muted" style="flex-shrink:0;padding-top:2px">${isOpen ? '▲' : '▼'}</div>
+        </div>
+        <div class="timeline-expand${isOpen ? ' open' : ''}">
+          ${item.detalhe || '<em>Sem detalhes adicionais.</em>'}
+          <br>
+          <button class="btn btn-sm btn-outline status-btn" onclick="cycleStatus(${i})">
+            ${STATUS_ICON[item.status]} → ${STATUS_NEXT_LABEL[item.status]}
+          </button>
+        </div>
+      </div>`;
+    }).join('')}
+  `;
+}
+
+function toggleExpand(i) {
+  if (expandedItems.has(i)) expandedItems.delete(i);
+  else expandedItems.add(i);
+  renderTimeline();
+}
+
+function cycleStatus(i) {
+  D.linha_do_tempo[i].status = STATUS_CYCLE[D.linha_do_tempo[i].status] || 'pendente';
+  save();
+  renderTimeline();
+}
+
+// ═══════════════════════════════════════════════════
+//  METAS
+// ═══════════════════════════════════════════════════
+const STATUS_LABELS = { nao_iniciado: '⚪ Não iniciado', em_andamento: '🟡 Em andamento', concluido: '🟢 Concluído' };
+
+function renderMetas() {
+  const el = document.getElementById('screen-metas');
+  el.innerHTML = D.metas.map((m, i) => {
+    const hasVal = m.valor_alvo != null && m.valor_atual != null;
+    const p = hasVal ? pct(m.valor_atual, m.valor_alvo) : null;
+    const chips = Object.keys(STATUS_LABELS).map(s =>
+      `<span class="chip ${m.status === s ? 's-' + s : ''}" onclick="setMetaStatus(${i},'${s}')">${STATUS_LABELS[s]}</span>`
+    ).join('');
+    return `
+    <div class="meta-card">
+      <div class="flex-between" style="margin-bottom:10px">
+        <div class="flex-center">
+          <span style="font-size:26px">${m.emoji}</span>
+          <div>
+            <div class="font-semi">${m.nome}</div>
+            <div class="text-xs text-muted">Prazo: ${fmtDate(m.prazo)}</div>
+          </div>
+        </div>
+        ${hasVal ? `
+        <div style="text-align:right">
+          <div style="font-size:19px;font-weight:700;color:var(--success)">${fmtCur(m.valor_atual, m.moeda)}</div>
+          <div class="text-xs text-muted">de ${fmtCur(m.valor_alvo, m.moeda)}</div>
+        </div>` : ''}
+      </div>
+      ${hasVal ? `
+        ${progBar(p, 10)}
+        <div class="flex-between mt-4" style="margin-bottom:10px">
+          <span class="text-xs text-muted">${p}%</span>
+          <span class="text-xs text-muted">falta ${fmtCur(m.valor_alvo - m.valor_atual, m.moeda)}</span>
+        </div>
+        <div style="margin-bottom:8px">
+          <label>Atualizar valor atual (${m.moeda})</label>
+          <input class="input" type="number" value="${m.valor_atual}" onchange="setMetaValor(${i}, this.value)">
+        </div>` : ''}
+      <div class="status-chips">${chips}</div>
+    </div>`;
+  }).join('') + `<button class="btn btn-outline btn-full" style="margin-top:8px" onclick="exportJSON()">📥 Exportar dados (backup JSON)</button>`;
+}
+
+function setMetaValor(i, v) { D.metas[i].valor_atual = parseFloat(v) || 0; save(); }
+function setMetaStatus(i, s) { D.metas[i].status = s; save(); renderMetas(); }
+
+// ═══════════════════════════════════════════════════
+//  PLANO 90 DIAS
+// ═══════════════════════════════════════════════════
+function renderPlano() {
+  const el = document.getElementById('screen-plano');
+  const p  = D.plano_90_dias;
+  const now = new Date();
+  const mesAtual = now.getMonth(); // 0=Jan ... 5=Jun
+  const anoAtual = now.getFullYear();
+
+  // Detect which plano month is current based on year/month
+  const PLANO_MONTHS = ['Junho', 'Julho', 'Agosto'];
+  const PLANO_MONTH_NUMS = [5, 6, 7]; // 0-indexed months
+  const PLANO_YEAR = 2026;
+
+  const mesesHtml = p.meses.map((mes, mi) => {
+    const isActive = (anoAtual === PLANO_YEAR && mesAtual === PLANO_MONTH_NUMS[mi]);
+    const isDone   = (anoAtual > PLANO_YEAR || (anoAtual === PLANO_YEAR && mesAtual > PLANO_MONTH_NUMS[mi]));
+    const concluidas = mes.concluidas || [];
+    const totalFeitas = concluidas.length;
+    const total = mes.acoes.length;
+    const pMes = pct(totalFeitas, total);
+
+    return `
+    <div class="plano-card" style="${isActive ? 'border-color:var(--primary)' : isDone ? 'border-color:var(--success);opacity:0.7' : ''}">
+      <div class="plano-header">
+        <div>
+          <div class="font-semi">${isActive ? '▶ ' : isDone ? '✅ ' : ''}${mes.mes}</div>
+          <div class="plano-tema">${mes.tema}</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:15px;font-weight:700;color:${pMes===100?'var(--success)':'var(--text)'}">${totalFeitas}/${total}</div>
+          <div class="text-xs text-muted">${pMes}%</div>
+        </div>
+      </div>
+      ${progBar(pMes, 6)}
+      <div class="plano-body" style="margin-top:10px">
+        ${mes.acoes.map((acao, ai) => {
+          const checked = concluidas.includes(ai);
+          const cid = `plano-${mi}-${ai}`;
+          return `
+          <div class="plano-action${checked ? ' done' : ''}">
+            <input type="checkbox" id="${cid}" ${checked ? 'checked' : ''} onchange="togglePlanoAcao(${mi},${ai},this.checked)">
+            <label for="${cid}">${acao}</label>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>`;
+  }).join('');
+
+  el.innerHTML = `
+    <div class="tres-numeros">
+      <div class="text-xs font-semi" style="color:var(--primary);margin-bottom:6px">3 NÚMEROS PARA ACOMPANHAR</div>
+      <ul style="list-style:none">
+        ${p.tres_numeros.map(n => `<li>${n}</li>`).join('')}
+      </ul>
+    </div>
+
+    <div class="card" style="margin-bottom:12px">
+      <div class="text-xs text-muted font-semi">📆 DIA DE PAGAMENTO</div>
+      <div class="font-semi mt-4" style="font-size:15px">${p.dia_pagamento}</div>
+      <div class="text-xs text-muted mt-4">Transferir para Wise + Tesouro Selic antes de qualquer gasto.</div>
+    </div>
+
+    ${mesesHtml}
+    <button class="btn btn-outline btn-full" onclick="exportJSON()">📥 Exportar dados (backup JSON)</button>
+  `;
+}
+
+function togglePlanoAcao(mi, ai, checked) {
+  const mes = D.plano_90_dias.meses[mi];
+  if (!mes.concluidas) mes.concluidas = [];
+  if (checked) {
+    if (!mes.concluidas.includes(ai)) mes.concluidas.push(ai);
+  } else {
+    mes.concluidas = mes.concluidas.filter(x => x !== ai);
+  }
+  save();
+  // Re-render just the plano without losing checkbox state
+  const el = document.getElementById('screen-plano');
+  // Lightweight re-render only progress numbers
+  renderPlano();
+}
+
+// ═══════════════════════════════════════════════════
+//  MEU DIA
+// ═══════════════════════════════════════════════════
+function todayShort() {
+  const d = new Date();
+  const days = ['dom','seg','ter','qua','qui','sex','sáb'];
+  const months = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+  return `${days[d.getDay()]}, ${d.getDate()} ${months[d.getMonth()]}`;
+}
+
+function weekRangeLabel() {
+  const now = new Date();
+  const dow = now.getDay();
+  const mon = new Date(now); mon.setDate(now.getDate() - (dow === 0 ? 6 : dow - 1));
+  const sun = new Date(mon); sun.setDate(mon.getDate() + 6);
+  const months = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+  return `${mon.getDate()} – ${sun.getDate()} ${months[sun.getMonth()]}`;
+}
+
+function renderTaskItems(tasks, tipo) {
+  if (!tasks || tasks.length === 0) {
+    return '<div class="task-empty">Sem tarefas — adicione abaixo.</div>';
+  }
+  return tasks.map((t, i) => `
+    <div class="task-item${t.feita ? ' done' : ''}">
+      <div class="task-cb${t.feita ? ' checked' : ''}" onclick="toggleTask('${tipo}',${i})">${t.feita ? '✓' : ''}</div>
+      <span class="task-text">${escHtml(t.texto)}</span>
+      <button class="task-del" onclick="deleteTask('${tipo}',${i})" title="Remover">✕</button>
+    </div>`).join('');
+}
+
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function renderMeuDia() {
+  const t = D.tarefas || { hoje: [], semana: [] };
+  const proxValencia = D.linha_do_tempo.filter(i => i.status === 'pendente').slice(0, 3);
+
+  return `
+    <!-- HOJE -->
+    <div class="meu-dia-block">
+      <div class="meu-dia-block-header">
+        <span class="meu-dia-label">Hoje</span>
+        <span class="text-xs text-muted">${todayShort()}</span>
+      </div>
+      <div id="list-hoje">${renderTaskItems(t.hoje, 'hoje')}</div>
+      <div id="add-row-hoje" class="add-task-row" style="display:none">
+        <input id="inp-hoje" class="input" placeholder="Nova tarefa de hoje..."
+          onkeydown="if(event.key==='Enter')confirmAdd('hoje')"
+          onkeydown="if(event.key==='Escape')hideAdd('hoje')">
+        <button class="btn btn-success" onclick="confirmAdd('hoje')">✓</button>
+      </div>
+      <button class="add-task-btn" id="addbtn-hoje" onclick="showAdd('hoje')">+ adicionar tarefa de hoje</button>
+    </div>
+
+    <!-- ESTA SEMANA -->
+    <div class="meu-dia-block">
+      <div class="meu-dia-block-header">
+        <span class="meu-dia-label">Esta semana</span>
+        <span class="text-xs text-muted">${weekRangeLabel()}</span>
+      </div>
+      <div id="list-semana">${renderTaskItems(t.semana, 'semana')}</div>
+      <div id="add-row-semana" class="add-task-row" style="display:none">
+        <input id="inp-semana" class="input" placeholder="Nova tarefa da semana..."
+          onkeydown="if(event.key==='Enter')confirmAdd('semana')"
+          onkeydown="if(event.key==='Escape')hideAdd('semana')">
+        <button class="btn btn-success" onclick="confirmAdd('semana')">✓</button>
+      </div>
+      <button class="add-task-btn" id="addbtn-semana" onclick="showAdd('semana')">+ adicionar tarefa da semana</button>
+    </div>
+
+    <!-- PROJETO VALENCIA -->
+    <div class="meu-dia-block" style="border-color:#3d3a7e;background:#13112a">
+      <div class="meu-dia-block-header" style="margin-bottom:8px">
+        <span class="meu-dia-label" style="color:var(--primary)">🇪🇸 Próximos marcos Valencia</span>
+        <a href="#timeline" class="text-xs text-muted" style="text-decoration:none">ver todos →</a>
+      </div>
+      ${proxValencia.length === 0
+        ? '<div class="task-empty">Nenhum marco pendente.</div>'
+        : proxValencia.map(item => `
+          <div class="valencia-marco">
+            <div class="valencia-marco-periodo">${item.periodo}</div>
+            <div class="valencia-marco-acao">${item.acao}</div>
+            ${item.detalhe ? `<div class="valencia-marco-detalhe">${item.detalhe.length > 110 ? item.detalhe.slice(0,110) + '…' : item.detalhe}</div>` : ''}
+          </div>`).join('')}
+    </div>
+  `;
+}
+
+function showAdd(tipo) {
+  const row  = document.getElementById('add-row-' + tipo);
+  const btn  = document.getElementById('addbtn-' + tipo);
+  if (!row) return;
+  row.style.display = 'flex';
+  if (btn) btn.style.display = 'none';
+  const inp = document.getElementById('inp-' + tipo);
+  if (inp) setTimeout(() => inp.focus(), 50);
+}
+
+function hideAdd(tipo) {
+  const row = document.getElementById('add-row-' + tipo);
+  const btn = document.getElementById('addbtn-' + tipo);
+  if (row) row.style.display = 'none';
+  if (btn) btn.style.display = '';
+}
+
+function confirmAdd(tipo) {
+  const inp = document.getElementById('inp-' + tipo);
+  if (!inp) return;
+  const texto = inp.value.trim();
+  if (!texto) { hideAdd(tipo); return; }
+  if (!D.tarefas) D.tarefas = { hoje: [], semana: [], ultima_data: null, ultima_semana: null };
+  D.tarefas[tipo].push({ id: Date.now().toString(36), texto, feita: false });
+  save();
+  inp.value = '';
+  const listEl = document.getElementById('list-' + tipo);
+  if (listEl) listEl.innerHTML = renderTaskItems(D.tarefas[tipo], tipo);
+  // Manter add-row aberto para múltiplas entradas
+  setTimeout(() => inp.focus(), 30);
+}
+
+function toggleTask(tipo, i) {
+  D.tarefas[tipo][i].feita = !D.tarefas[tipo][i].feita;
+  save();
+  const listEl = document.getElementById('list-' + tipo);
+  if (listEl) listEl.innerHTML = renderTaskItems(D.tarefas[tipo], tipo);
+}
+
+function deleteTask(tipo, i) {
+  D.tarefas[tipo].splice(i, 1);
+  save();
+  const listEl = document.getElementById('list-' + tipo);
+  if (listEl) listEl.innerHTML = renderTaskItems(D.tarefas[tipo], tipo);
+}
+
+// ═══════════════════════════════════════════════════
+//  CHAT — RENDER
+// ═══════════════════════════════════════════════════
+function renderChat() {
+  const el = document.getElementById('screen-chat');
+  const hasKey = !!localStorage.getItem('valencia_api_key');
+
+  el.innerHTML = `
+    <div id="chat-messages">
+      ${chatHistory.length === 0 ? chatWelcome() : chatHistory.map(m => {
+        const html = m.role === 'user'
+          ? escHtml(m.content)
+          : mdToHtml(m.content.replace(/<action>[\s\S]*?<\/action>/g,'').trim());
+        return `<div class="chat-bubble-wrap ${m.role}"><div class="chat-bubble ${m.role}">${html}</div></div>`;
+      }).join('')}
+    </div>
+    ${!hasKey ? `
+    <div class="api-key-banner" style="margin-top:12px">
+      <div class="font-semi" style="color:var(--warning);margin-bottom:6px">🔑 Chave API necessária</div>
+      <div class="text-xs text-muted" style="margin-bottom:10px">
+        Insira sua chave da API Anthropic para ativar o assistente.<br>
+        Ela fica salva apenas localmente no seu browser.
+      </div>
+      <div class="add-task-row">
+        <input id="inp-apikey-main" class="input" type="password" placeholder="sk-ant-api03-...">
+        <button class="btn btn-success" onclick="saveApiKeyMain()">Salvar</button>
+      </div>
+    </div>` : ''}
+  `;
+  setTimeout(() => {
+    const msgs = document.getElementById('chat-messages');
+    if (msgs) msgs.scrollTop = msgs.scrollHeight;
+  }, 60);
+}
+
+function chatWelcome() {
+  const days = daysLeft(D.perfil.data_embarque_alvo);
+  const hasKey = !!localStorage.getItem('valencia_api_key');
+  return `
+    <div class="chat-welcome">
+      <div style="font-size:52px;margin-bottom:12px">🤖</div>
+      <div style="font-size:17px;font-weight:700;margin-bottom:6px">Assistente Valencia</div>
+      <div class="text-sm text-muted" style="margin-bottom:8px">
+        Conheço todo o seu projeto.<br><strong style="color:var(--primary)">${days} dias</strong> para o embarque.
+      </div>
+      ${hasKey
+        ? '<div class="text-xs text-muted">Use os atalhos abaixo ou faça uma pergunta.</div>'
+        : '<div class="text-xs" style="color:var(--warning)">Configure sua chave API abaixo para começar.</div>'
+      }
+    </div>`;
+}
+
+// ═══════════════════════════════════════════════════
+//  CHAT — SYSTEM PROMPT
+// ═══════════════════════════════════════════════════
+function buildSystemPrompt() {
+  const habList = D.habitos.lista || D.habitos;
+  const espanhol = habList.find(h => h.id === 'espanhol');
+  const proxMarcos = D.linha_do_tempo
+    .filter(i => i.status === 'pendente').slice(0, 4)
+    .map(i => `- ${i.periodo}: ${i.acao}`).join('\n');
+  const hoje = (D.tarefas?.hoje || []).map(t => `  [${t.feita?'x':' '}] ${t.texto}`).join('\n') || '  (vazio)';
+  const semana = (D.tarefas?.semana || []).map(t => `  [${t.feita?'x':' '}] ${t.texto}`).join('\n') || '  (vazio)';
+  const cx = D.financeiro.cotacao_eur_brl;
+  const mesesR = Math.max(0, Math.ceil(daysLeft(D.perfil.data_embarque_alvo) / 30));
+  const eurosProj = Math.round(D.baldes_valencia.balde_euros.saldo_atual + (D.baldes_valencia.balde_euros.aporte_mensal / cx) * mesesR);
+
+  return `Você é o assistente pessoal do Guilherme, operador de transmissão ao vivo (vMix) que está se mudando para Valencia, Espanha em março de 2028 com sua esposa (cidadã espanhola) e sua gata.
+
+SITUAÇÃO ATUAL (${new Date().toLocaleDateString('pt-BR')}):
+- Dias para o embarque: ${daysLeft(D.perfil.data_embarque_alvo)} dias (01/03/2028)
+- Capital projetado na chegada: €${eurosProj} (meta €12.000)
+- Balde Euros (Wise): €${D.baldes_valencia.balde_euros.saldo_atual} / €${D.baldes_valencia.balde_euros.meta}
+- Balde Viagem (Tesouro Selic): R$${D.baldes_valencia.balde_viagem.saldo_atual} / R$${D.baldes_valencia.balde_viagem.meta}
+- Reserva Emergência (CDB): R$${D.baldes_valencia.balde_emergencia.saldo_atual} / R$${D.baldes_valencia.balde_emergencia.meta}
+- Streak espanhol: ${espanhol?.streak_atual || 0} dias consecutivos
+- Cotação €/R$: ${cx}
+
+TAREFAS DE HOJE:
+${hoje}
+
+TAREFAS DESTA SEMANA:
+${semana}
+
+PRÓXIMOS MARCOS VALENCIA:
+${proxMarcos}
+
+PERFIL FINANCEIRO:
+- Renda mensal: R$${D.financeiro.renda_mensal.total} (Guilherme R$${D.financeiro.renda_mensal.guilherme} + Esposa R$${D.financeiro.renda_mensal.esposa})
+- Jarro LIB → Wise (euros): R$${D.seis_jarros.jarros.find(j=>j.id==='LIB')?.valor_mensal}/mês
+- Jarro POU → Tesouro Selic: R$${D.seis_jarros.jarros.find(j=>j.id==='POU')?.valor_mensal}/mês
+- Dia de pagamento: 2ª quarta do mês
+
+REGRAS DE RESPOSTA:
+- Respostas curtas e diretas — no máximo 4 parágrafos curtos
+- Use markdown (**negrito**, listas com -) para organizar
+- Use emojis com moderação
+- Foco nos 3 essenciais: espanhol, dinheiro, carreira remota
+
+AÇÕES DISPONÍVEIS — quando identificar um comando, inclua ao final:
+<action>{"type":"ADD_TASK_TODAY","payload":{"texto":"..."}}</action>
+<action>{"type":"ADD_TASK_WEEK","payload":{"texto":"..."}}</action>
+<action>{"type":"UPDATE_SALDO","payload":{"balde":"balde_euros|balde_viagem|balde_emergencia","valor":0}}</action>
+<action>{"type":"UPDATE_STREAK","payload":{"id":"espanhol","delta":1}}</action>
+<action>{"type":"MARK_MARCO_DONE","payload":{"acao":"texto exato do marco"}}</action>
+<action>{"type":"UPDATE_COTACAO","payload":{"valor":6.8}}</action>
+
+Seja o copiloto do Projeto Valencia. Conheça os números, ajude a tomar decisões rápidas.`;
+}
+
+// ═══════════════════════════════════════════════════
+//  CHAT — API & MENSAGENS
+// ═══════════════════════════════════════════════════
+async function sendChatMessage(text) {
+  const apiKey = localStorage.getItem('valencia_api_key');
+  if (!apiKey) {
+    addBubble('assistant', '⚠️ Configure sua chave API primeiro — clique em 🔑 abaixo.');
+    return;
+  }
+
+  chatHistory.push({ role: 'user', content: text });
+  addBubble('user', escHtml(text));
+  addTypingBubble();
+
+  try {
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 1024,
+        system: buildSystemPrompt(),
+        messages: chatHistory.slice(-10)
+      })
+    });
+
+    const json = await resp.json();
+    removeTypingBubble();
+
+    if (!resp.ok) {
+      const msg = json?.error?.message || `Erro ${resp.status}`;
+      addBubble('assistant', `⚠️ Erro na API: ${escHtml(msg)}`);
+      chatHistory.pop();
+      return;
+    }
+
+    const fullText = json.content[0].text;
+
+    // Executar todas as ações presentes na resposta
+    const actionRe = /<action>([\s\S]*?)<\/action>/g;
+    let m;
+    while ((m = actionRe.exec(fullText)) !== null) {
+      try { executeAction(JSON.parse(m[1].trim())); } catch(e) {}
+    }
+
+    chatHistory.push({ role: 'assistant', content: fullText });
+    const clean = fullText.replace(/<action>[\s\S]*?<\/action>/g, '').trim();
+    addBubble('assistant', mdToHtml(clean));
+
+  } catch(e) {
+    removeTypingBubble();
+    addBubble('assistant', `⚠️ Erro de conexão: ${escHtml(e.message)}`);
+    chatHistory.pop();
+  }
+}
+
+function executeAction(action) {
+  try {
+    switch (action.type) {
+      case 'ADD_TASK_TODAY':
+        if (!D.tarefas) D.tarefas = { hoje: [], semana: [] };
+        D.tarefas.hoje.push({ id: Date.now().toString(36), texto: action.payload.texto, feita: false });
+        break;
+      case 'ADD_TASK_WEEK':
+        if (!D.tarefas) D.tarefas = { hoje: [], semana: [] };
+        D.tarefas.semana.push({ id: Date.now().toString(36), texto: action.payload.texto, feita: false });
+        break;
+      case 'UPDATE_SALDO': {
+        const b = D.baldes_valencia[action.payload.balde];
+        if (b) b.saldo_atual = Number(action.payload.valor);
+        break;
+      }
+      case 'UPDATE_STREAK': {
+        const h = (D.habitos.lista || D.habitos).find(h => h.id === action.payload.id);
+        if (h) h.streak_atual = Math.max(0, (h.streak_atual || 0) + (action.payload.delta || 1));
+        break;
+      }
+      case 'MARK_MARCO_DONE': {
+        const item = D.linha_do_tempo.find(i => i.acao === action.payload.acao || i.acao.includes(action.payload.acao));
+        if (item) item.status = 'concluido';
+        break;
+      }
+      case 'UPDATE_COTACAO':
+        D.financeiro.cotacao_eur_brl = Number(action.payload.valor);
+        break;
+    }
+    save();
+  } catch(e) { console.warn('executeAction:', e); }
+}
+
+// ── Bubble helpers ──
+function addBubble(role, html) {
+  const msgs = document.getElementById('chat-messages');
+  if (!msgs) return;
+  const welcome = msgs.querySelector('.chat-welcome');
+  if (welcome) welcome.remove();
+  const div = document.createElement('div');
+  div.className = `chat-bubble-wrap ${role}`;
+  div.innerHTML = `<div class="chat-bubble ${role}">${html}</div>`;
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+  document.body.scrollTop = document.documentElement.scrollTop = document.body.scrollHeight;
+}
+
+function addTypingBubble() {
+  const msgs = document.getElementById('chat-messages');
+  if (!msgs) return;
+  const div = document.createElement('div');
+  div.id = 'chat-typing';
+  div.className = 'chat-bubble-wrap assistant';
+  div.innerHTML = `<div class="chat-bubble assistant"><div class="typing-dots"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div></div>`;
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function removeTypingBubble() {
+  const el = document.getElementById('chat-typing');
+  if (el) el.remove();
+}
+
+// ── Markdown ──
+function mdToHtml(raw) {
+  if (!raw) return '';
+  let s = raw.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  s = s.replace(/\*\*(.*?)\*\*/gs, '<strong>$1</strong>');
+  s = s.replace(/\*(.*?)\*/gs, '<em>$1</em>');
+  s = s.replace(/`([^`\n]+)`/g, '<code>$1</code>');
+  s = s.replace(/^#{1,3}\s+(.+)$/gm, '<strong>$1</strong>');
+  s = s.replace(/^[-•]\s(.+)$/gm, '<div style="margin:3px 0 3px 6px">• $1</div>');
+  s = s.replace(/^(\d+)\.\s(.+)$/gm, '<div style="margin:3px 0 3px 6px">$1. $2</div>');
+  s = s.replace(/\n\n+/g, '<br><br>');
+  s = s.replace(/\n/g, '<br>');
+  return s;
+}
+
+// ── Input helpers ──
+function submitChat() {
+  const inp = document.getElementById('chat-inp');
+  if (!inp || !inp.value.trim()) return;
+  const text = inp.value.trim();
+  inp.value = '';
+  sendChatMessage(text);
+}
+
+function quickSend(text) { sendChatMessage(text); }
+
+function toggleApikeyRow() {
+  const row = document.getElementById('apikey-row');
+  if (!row) return;
+  const open = row.style.display !== 'none' && row.style.display !== '';
+  row.style.display = open ? 'none' : 'block';
+  if (!open) {
+    const inp = document.getElementById('inp-apikey');
+    const existing = localStorage.getItem('valencia_api_key') || '';
+    if (inp) { inp.value = existing; setTimeout(() => inp.focus(), 40); }
+  }
+}
+
+function saveApiKey() {
+  const inp = document.getElementById('inp-apikey');
+  if (!inp || !inp.value.trim()) return;
+  localStorage.setItem('valencia_api_key', inp.value.trim());
+  document.getElementById('apikey-row').style.display = 'none';
+  addBubble('assistant', '🔑 Chave API salva! Pode começar a conversar.');
+}
+
+function saveApiKeyMain() {
+  const inp = document.getElementById('inp-apikey-main');
+  if (!inp || !inp.value.trim()) return;
+  localStorage.setItem('valencia_api_key', inp.value.trim());
+  renderChat();
+  setTimeout(() => addBubble('assistant', '🔑 Chave API salva! Use os atalhos acima ou faça uma pergunta.'), 100);
+}
+
+// ═══════════════════════════════════════════════════
+//  BOOT
+// ═══════════════════════════════════════════════════
+load();
+route();
+window.addEventListener('hashchange', route);
+</script>
+</body>
+</html>
