@@ -366,6 +366,52 @@
       40%,80%{transform:translateX(8px)}
     }
     .login-shake { animation: loginShake 0.38s ease; }
+
+    /* ── Face ID / biometria ── */
+    .login-sep {
+      display: flex; align-items: center; gap: 10px;
+      margin: 12px 0; color: var(--muted); font-size: 11px;
+      text-transform: uppercase; letter-spacing: 1px;
+    }
+    .login-sep::before, .login-sep::after {
+      content: ''; flex: 1; height: 1px; background: var(--border);
+    }
+    .login-btn-faceid {
+      width: 100%; padding: 13px;
+      background: transparent;
+      color: var(--primary); border: 2px solid var(--primary);
+      border-radius: var(--radius-sm);
+      font-family: inherit; font-size: 15px; font-weight: 700;
+      cursor: pointer; transition: opacity 0.15s, transform 0.1s;
+    }
+    .login-btn-faceid:hover  { opacity: 0.8; }
+    .login-btn-faceid:active { transform: scale(0.98); }
+
+    /* Overlay de oferta de ativação */
+    #biometria-offer {
+      position: fixed; inset: 0; z-index: 10000;
+      background: rgba(0,0,0,0.78);
+      display: none; align-items: center; justify-content: center;
+      padding: 20px;
+    }
+    .offer-card {
+      background: var(--card); border-radius: var(--radius);
+      border: 1px solid var(--border);
+      padding: 28px 20px 20px; width: 100%; max-width: 320px;
+      text-align: center;
+    }
+    .offer-icon  { font-size: 52px; margin-bottom: 12px; }
+    .offer-title { font-size: 17px; font-weight: 800; margin-bottom: 8px; }
+    .offer-desc  { font-size: 13px; color: var(--muted); line-height: 1.55; margin-bottom: 22px; }
+    .offer-btn {
+      width: 100%; padding: 13px; margin-bottom: 8px;
+      border-radius: var(--radius-sm);
+      font-size: 15px; font-weight: 700; font-family: inherit;
+      cursor: pointer; transition: opacity 0.15s;
+    }
+    .offer-btn:active { transform: scale(0.98); }
+    .offer-btn-primary { background: var(--primary); color: #fff; border: none; }
+    .offer-btn-ghost   { background: transparent; color: var(--muted); border: 1px solid var(--border); }
   </style>
 </head>
 <body>
@@ -383,9 +429,26 @@
         placeholder="••••••••"
         onkeydown="if(event.key==='Enter') doLogin()">
     </div>
-    <button class="login-btn" onclick="doLogin()">Entrar</button>
+    <button class="login-btn" onclick="doLogin()">🔑 Entrar com senha</button>
     <div class="login-error" id="login-error">Senha incorreta. Tente novamente.</div>
+    <div class="login-sep" id="faceid-sep" style="display:none">ou</div>
+    <button id="faceid-btn" class="login-btn-faceid" onclick="entrarComFaceID()" style="display:none">
+      👤 Entrar com Face ID
+    </button>
     <div class="login-footer">Seu projeto, sua jornada. 🇪🇸</div>
+  </div>
+</div>
+
+<!-- Overlay: oferta de ativação de biometria (aparece após 1º login com senha) -->
+<div id="biometria-offer">
+  <div class="offer-card">
+    <div class="offer-icon">👤</div>
+    <div class="offer-title">Ativar Face ID?</div>
+    <div class="offer-desc">
+      Entre no app com um olhar — sem precisar digitar a senha toda vez.
+    </div>
+    <button class="offer-btn offer-btn-primary" onclick="ativarBiometria()">Ativar Face ID</button>
+    <button class="offer-btn offer-btn-ghost"   onclick="dispensarBiometria()">Agora não</button>
   </div>
 </div>
 
@@ -663,7 +726,7 @@ function cotacaoLabel() {
   else if (last === hoje)  quando = 'atualizado hoje';
   else if (last === ontem) quando = 'atualizado ontem';
   else                     quando = `atualizado ${new Date(last).toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})}`;
-  return `€1 = R$ ${cx.toFixed(2).replace('.',',')} · ${quando}`;
+  return `€1 = R$ ${cx.toFixed(4).replace('.',',')} · ${quando}`;
 }
 
 async function atualizarCotacao() {
@@ -674,7 +737,7 @@ async function atualizarCotacao() {
     const data = await res.json();
     const cx   = parseFloat(data.rates.BRL);
     if (!cx || isNaN(cx)) return;
-    D.financeiro.cotacao_eur_brl = parseFloat(cx.toFixed(2));
+    D.financeiro.cotacao_eur_brl = cx; // mantém precisão total da API
     save();
     localStorage.setItem(COTACAO_KEY, hoje);
     // Atualiza tela visível se mostrar cotação
@@ -1011,11 +1074,11 @@ function renderJarros() {
         </div>
         <div>
           <label>Cotação €/R$</label>
-          <input class="input" type="number" step="0.01" value="${fin.cotacao_eur_brl}" onchange="updateCotacao(this.value)">
+          <input class="input" type="number" step="0.0001" value="${Number(fin.cotacao_eur_brl).toFixed(4)}" onchange="updateCotacao(this.value)">
         </div>
       </div>
       <div class="text-xs text-muted" style="text-align:center;margin-top:6px">
-        ${fmtBRL(fin.renda_mensal.total)} ≈ ${fmtEUR(totalEUR)} ao câmbio de R$${fin.cotacao_eur_brl}/€
+        ${fmtBRL(fin.renda_mensal.total)} ≈ ${fmtEUR(totalEUR)} ao câmbio de R$${Number(fin.cotacao_eur_brl).toFixed(4)}/€
       </div>
     </div>
 
@@ -1838,43 +1901,146 @@ function saveApiKeyMain() {
 // ═══════════════════════════════════════════════════
 const SENHA = window.ENV_SENHA || 'valencia2028';
 
+// ═══════════════════════════════════════════════════
+//  WEBAUTHN / FACE ID
+// ═══════════════════════════════════════════════════
+function biometriaDisponivel() {
+  return typeof window.PublicKeyCredential !== 'undefined';
+}
+
+async function registrarBiometria() {
+  try {
+    const cred = await navigator.credentials.create({
+      publicKey: {
+        challenge: crypto.getRandomValues(new Uint8Array(32)),
+        rp: { name: 'Valencia 2028' },
+        user: {
+          id: crypto.getRandomValues(new Uint8Array(16)),
+          name: 'guilherme',
+          displayName: 'Guilherme'
+        },
+        pubKeyCredParams: [{ alg: -7, type: 'public-key' }],
+        authenticatorSelection: {
+          authenticatorAttachment: 'platform',
+          userVerification: 'required'
+        },
+        timeout: 60000
+      }
+    });
+    localStorage.setItem('biometria_id',   btoa(String.fromCharCode(...new Uint8Array(cred.rawId))));
+    localStorage.setItem('biometria_ativa', 'true');
+    return true;
+  } catch (_) { return false; }
+}
+
+async function autenticarBiometria() {
+  const credId = localStorage.getItem('biometria_id');
+  if (!credId) return false;
+  try {
+    const assertion = await navigator.credentials.get({
+      publicKey: {
+        challenge: crypto.getRandomValues(new Uint8Array(32)),
+        allowCredentials: [{
+          id:   Uint8Array.from(atob(credId), c => c.charCodeAt(0)),
+          type: 'public-key'
+        }],
+        userVerification: 'required',
+        timeout: 60000
+      }
+    });
+    return !!assertion;
+  } catch (_) { return false; }
+}
+
+// Conclui o login e entra no app
+function concluirLogin() {
+  sessionStorage.setItem('autenticado', 'true');
+  document.getElementById('login-screen').style.display = 'none';
+  load();
+  initDots();
+  initSwipe();
+  goToScreen(0, false);
+  atualizarCotacao();
+}
+
+// Chamado pelo botão Face ID
+async function entrarComFaceID() {
+  const btn = document.getElementById('faceid-btn');
+  const orig = btn.textContent;
+  btn.textContent = '⏳ Aguardando...';
+  btn.disabled = true;
+  const ok = await autenticarBiometria();
+  btn.textContent = orig;
+  btn.disabled = false;
+  if (ok) {
+    concluirLogin();
+  } else {
+    btn.textContent = '❌ Não reconhecido — use a senha';
+    setTimeout(() => { btn.textContent = orig; }, 2800);
+  }
+}
+
+// Mostra overlay para ativar biometria (após 1º login com senha)
+function mostrarOfertaBiometria() {
+  const jaBiometrico = localStorage.getItem('biometria_ativa') === 'true';
+  if (!biometriaDisponivel() || jaBiometrico) {
+    concluirLogin();
+    return;
+  }
+  document.getElementById('biometria-offer').style.display = 'flex';
+}
+
+async function ativarBiometria() {
+  document.getElementById('biometria-offer').style.display = 'none';
+  await registrarBiometria(); // se falhar, segue em frente silenciosamente
+  atualizarBotaoFaceID();
+  concluirLogin();
+}
+
+function dispensarBiometria() {
+  document.getElementById('biometria-offer').style.display = 'none';
+  concluirLogin();
+}
+
+// Mostra/esconde o botão Face ID conforme disponibilidade
+function atualizarBotaoFaceID() {
+  const ativo  = biometriaDisponivel() && localStorage.getItem('biometria_ativa') === 'true';
+  const btn    = document.getElementById('faceid-btn');
+  const sep    = document.getElementById('faceid-sep');
+  if (btn) btn.style.display = ativo ? 'block' : 'none';
+  if (sep) sep.style.display = ativo ? 'flex'  : 'none';
+}
+
+// ═══════════════════════════════════════════════════
+//  AUTH
+// ═══════════════════════════════════════════════════
 function checkAuth() {
   const ls = document.getElementById('login-screen');
   if (sessionStorage.getItem('autenticado') === 'true') {
     ls.style.display = 'none';
     return true;
   }
-  // Mostrar tela de login com countdown calculado
   ls.style.display = 'flex';
   const days = Math.ceil((new Date('2028-03-01T00:00:00') - new Date().setHours(0,0,0,0)) / 86400000);
   const el = document.getElementById('login-days');
   if (el) el.textContent = days;
-  setTimeout(() => {
-    const inp = document.getElementById('login-senha');
-    if (inp) inp.focus();
-  }, 100);
+  atualizarBotaoFaceID();
+  setTimeout(() => { document.getElementById('login-senha')?.focus(); }, 100);
   return false;
 }
 
 function doLogin() {
-  const inp = document.getElementById('login-senha');
-  const err = document.getElementById('login-error');
+  const inp  = document.getElementById('login-senha');
+  const err  = document.getElementById('login-error');
   const card = document.querySelector('.login-card');
   if (!inp) return;
 
   if (inp.value === SENHA) {
-    sessionStorage.setItem('autenticado', 'true');
-    document.getElementById('login-screen').style.display = 'none';
-    load();
-    initDots();
-    initSwipe();
-    goToScreen(0, false);
-    atualizarCotacao();
+    mostrarOfertaBiometria(); // decide: ativa biometria ou vai direto para o app
   } else {
     inp.value = '';
     err.style.display = 'block';
     card.classList.remove('login-shake');
-    // Force reflow para reiniciar a animação
     void card.offsetWidth;
     card.classList.add('login-shake');
     setTimeout(() => { err.style.display = 'none'; inp.focus(); }, 2800);
