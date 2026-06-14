@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Valencia 2028 🇪🇸</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <style>
     :root {
@@ -319,25 +320,62 @@
     .login-shake { animation: loginShake .38s ease; }
     .login-sep { display: flex; align-items: center; gap: 10px; margin: 12px 0; color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: 1px; }
     .login-sep::before, .login-sep::after { content: ''; flex: 1; height: 1px; background: var(--border); }
-    .login-btn-faceid { width: 100%; padding: 13px; background: transparent; color: var(--primary); border: 2px solid var(--primary); border-radius: var(--radius-sm); font-family: inherit; font-size: 15px; font-weight: 700; cursor: pointer; transition: opacity .15s; }
-    .login-btn-faceid:hover { opacity: .8; }
-
-    /* ── Biometria offer ── */
-    #biometria-offer { position: fixed; inset: 0; z-index: 10000; background: rgba(0,0,0,.78); display: none; align-items: center; justify-content: center; padding: 20px; }
-    .offer-card { background: var(--card); border-radius: var(--radius); border: 1px solid var(--border); padding: 28px 20px 20px; width: 100%; max-width: 320px; text-align: center; }
-    .offer-icon  { font-size: 52px; margin-bottom: 12px; }
-    .offer-title { font-size: 17px; font-weight: 800; margin-bottom: 8px; }
-    .offer-desc  { font-size: 13px; color: var(--muted); line-height: 1.55; margin-bottom: 22px; }
-    .offer-btn { width: 100%; padding: 13px; margin-bottom: 8px; border-radius: var(--radius-sm); font-size: 15px; font-weight: 700; font-family: inherit; cursor: pointer; transition: opacity .15s; }
-    .offer-btn:active { transform: scale(0.98); }
-    .offer-btn-primary { background: var(--primary); color: #fff; border: none; }
     .offer-btn-ghost   { background: transparent; color: var(--muted); border: 1px solid var(--border); }
+
+    /* ── Loading screen ── */
+    #loading-screen {
+      position: fixed; inset: 0; z-index: 9999; background: var(--bg);
+      display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 16px;
+    }
+    .loading-spinner {
+      width: 44px; height: 44px; border: 3px solid var(--border); border-top-color: var(--primary);
+      border-radius: 50%; animation: spin .75s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Toast ── */
+    #toast {
+      position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%) translateY(20px);
+      background: #2a2d3e; color: var(--text); padding: 10px 20px; border-radius: 99px;
+      font-size: 13px; z-index: 1000; opacity: 0; transition: all .3s;
+      white-space: nowrap; pointer-events: none; border: 1px solid var(--border);
+    }
+    #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    #toast.toast-ok   { border-color: var(--success); color: var(--success); }
+    #toast.toast-erro { border-color: var(--danger); color: var(--danger); }
+
+    /* ── User button + menu ── */
+    .page-header { justify-content: space-between; }
+    #user-btn {
+      width: 32px; height: 32px; border-radius: 50%; background: var(--primary);
+      color: #fff; border: none; font-size: 14px; font-weight: 700; cursor: pointer;
+      display: none; align-items: center; justify-content: center; flex-shrink: 0;
+      margin-bottom: 1px;
+    }
+    #user-menu {
+      position: fixed; top: 50px; right: max(15px, calc((100vw - 480px) / 2));
+      z-index: 300; background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 14px; min-width: 220px;
+      display: none; box-shadow: 0 8px 24px rgba(0,0,0,.5);
+    }
+    #user-menu.open { display: block; }
+    .user-menu-nome  { font-size: 15px; font-weight: 700; margin-bottom: 2px; }
+    .user-menu-email { font-size: 11px; color: var(--muted); margin-bottom: 14px; word-break: break-all; }
+
+    /* ── Login Supabase (email + senha) ── */
+    .login-input-email { text-align: left !important; letter-spacing: normal !important; }
   </style>
 </head>
 <body>
 
-<!-- ═══ LOGIN ═══ -->
-<div id="login-screen">
+<!-- ═══ LOADING ═══ -->
+<div id="loading-screen">
+  <div class="loading-spinner"></div>
+  <div style="font-size:13px;color:var(--muted)">Carregando...</div>
+</div>
+
+<!-- ═══ LOGIN (Supabase) ═══ -->
+<div id="login-screen" style="display:none">
   <div class="login-card">
     <div class="login-flag">🇪🇸</div>
     <div class="login-title">Projeto Valencia</div>
@@ -345,33 +383,41 @@
       <div class="login-days" id="login-days">—</div>
       <div class="login-days-label">dias para o embarque</div>
     </div>
+    <div class="login-input-wrap" style="margin-bottom:8px">
+      <input id="login-email" class="input login-input-email" type="email" placeholder="seu@email.com"
+        style="font-size:15px;padding:12px"
+        onkeydown="if(event.key==='Enter') document.getElementById('login-senha').focus()">
+    </div>
     <div class="login-input-wrap">
       <input id="login-senha" class="input" type="password" placeholder="••••••••"
         onkeydown="if(event.key==='Enter') doLogin()">
     </div>
-    <button class="login-btn" onclick="doLogin()">🔑 Entrar com senha</button>
-    <div class="login-error" id="login-error">Senha incorreta. Tente novamente.</div>
-    <div class="login-sep" id="faceid-sep" style="display:none">ou</div>
-    <button id="faceid-btn" class="login-btn-faceid" onclick="entrarComFaceID()" style="display:none">👤 Entrar com Face ID</button>
+    <button class="login-btn" id="login-btn" onclick="doLogin()">🔑 Entrar</button>
+    <div class="login-error" id="login-error">Email ou senha incorretos.</div>
+    <div style="margin-top:12px;text-align:center">
+      <a href="#" onclick="esqueceuSenha();return false"
+        style="font-size:12px;color:var(--muted);text-decoration:none">Esqueci minha senha</a>
+    </div>
     <div class="login-footer">Seu projeto, sua jornada. 🇪🇸</div>
   </div>
 </div>
 
-<!-- Overlay: oferta de biometria -->
-<div id="biometria-offer">
-  <div class="offer-card">
-    <div class="offer-icon">👤</div>
-    <div class="offer-title">Ativar Face ID?</div>
-    <div class="offer-desc">Entre no app com um olhar — sem precisar digitar a senha toda vez.</div>
-    <button class="offer-btn offer-btn-primary" onclick="ativarBiometria()">Ativar Face ID</button>
-    <button class="offer-btn offer-btn-ghost"   onclick="dispensarBiometria()">Agora não</button>
-  </div>
-</div>
+<!-- ═══ TOAST ═══ -->
+<div id="toast"></div>
 
 <!-- ═══ LAYOUT ═══ -->
 <div id="page-header" class="page-header">
   <h1 id="page-title">🏠 Home</h1>
+  <button id="user-btn" onclick="toggleUserMenu()">G</button>
 </div>
+
+<!-- Menu do usuário -->
+<div id="user-menu">
+  <div class="user-menu-nome" id="user-menu-nome">Você</div>
+  <div class="user-menu-email" id="user-menu-email"></div>
+  <button class="btn btn-outline btn-full" onclick="doLogout()">Sair da conta</button>
+</div>
+
 <div id="screen-dots"></div>
 
 <div id="swipe-track">
@@ -410,6 +456,14 @@
 </nav>
 
 <script>
+// ═══════════════════════════════════════════════════
+//  SUPABASE
+// ═══════════════════════════════════════════════════
+const SUPABASE_URL = 'https://eupjlllbewqwkaeppgyh.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV1cGpsbGxiZXdxd2thZXBwZ3loIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE0NDY1NTAsImV4cCI6MjA5NzAyMjU1MH0.iwWF12B88vJLHEcTohTy8DNgNedcj1dtfhY796ZL75c';
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+let currentUser = null;
+
 // ═══════════════════════════════════════════════════
 //  DEFAULT DATA
 // ═══════════════════════════════════════════════════
@@ -509,7 +563,10 @@ function load() {
   catch(_) { D = JSON.parse(JSON.stringify(DEFAULT_DATA)); }
   if (!localStorage.getItem(KEY)) save();
 }
-function save() { localStorage.setItem(KEY, JSON.stringify(D)); }
+function save() {
+  localStorage.setItem(KEY, JSON.stringify(D));
+  salvarCompartilhado('dados_principais', D).catch(()=>{});
+}
 function exportJSON() {
   const blob = new Blob([JSON.stringify(D, null, 2)], {type:'application/json'});
   const url  = URL.createObjectURL(blob);
@@ -583,7 +640,11 @@ function loadHabitos() {
     H.ritual_valencia.feito = false; H.ritual_valencia.ultima_semana = null;
   }
 }
-function saveHabitos() { H.data = todayStr(); localStorage.setItem(HABITOS_KEY, JSON.stringify(H)); }
+function saveHabitos() {
+  H.data = todayStr();
+  localStorage.setItem(HABITOS_KEY, JSON.stringify(H));
+  salvarUsuario('habitos_diarios', H).catch(()=>{});
+}
 
 // ── Arquivamento diário
 const HIST_HAB_KEY = 'historico_habitos';
@@ -604,6 +665,7 @@ function arquivarHabitos(dataStr, hData) {
       ritual_valencia:    { feito:   hData.ritual_valencia.feito }
     };
     localStorage.setItem(HIST_HAB_KEY, JSON.stringify(hist));
+    salvarUsuario('historico_habitos', hist).catch(()=>{});
   } catch(_) {}
 }
 
@@ -616,6 +678,7 @@ function arquivarTarefa(tarefa) {
     hist[hoje].push({ texto: tarefa.texto, tag: tarefa.tag, concluida: true,
       hora: now.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'}) });
     localStorage.setItem(HIST_TAR_KEY, JSON.stringify(hist));
+    salvarUsuario('historico_tarefas', hist).catch(()=>{});
   } catch(_) {}
 }
 
@@ -625,7 +688,98 @@ function arquivarFinanceiro(baldeId, mes, aporte) {
     if (!hist[mes]) hist[mes] = {};
     hist[mes][baldeId] = aporte;
     localStorage.setItem('historico_financeiro', JSON.stringify(hist));
+    salvarCompartilhado('historico_financeiro', hist).catch(()=>{});
   } catch(_) {}
+}
+
+// ═══════════════════════════════════════════════════
+//  SUPABASE: funções de dados
+// ═══════════════════════════════════════════════════
+async function lerCompartilhado(chave) {
+  const { data, error } = await sb.from('dados_compartilhados').select('dados').eq('id', chave).single();
+  if (error || !data) return null;
+  return data.dados;
+}
+async function salvarCompartilhado(chave, dados) {
+  await sb.from('dados_compartilhados')
+    .upsert({ id: chave, dados: dados, updated_at: new Date().toISOString() }, { onConflict: 'id' });
+}
+async function lerUsuario(chave) {
+  if (!currentUser) return null;
+  const { data, error } = await sb.from('dados_usuario')
+    .select('dados').eq('user_id', currentUser.id).eq('chave', chave).single();
+  if (error || !data) return null;
+  return data.dados;
+}
+async function salvarUsuario(chave, dados) {
+  if (!currentUser) return;
+  await sb.from('dados_usuario')
+    .upsert({ user_id: currentUser.id, chave: chave, dados: dados, updated_at: new Date().toISOString() },
+             { onConflict: 'user_id,chave' });
+}
+
+async function carregarDados() {
+  // ── Dados compartilhados (baldes, financeiro, etc.)
+  let dadosPrincipais = await lerCompartilhado('dados_principais');
+  if (!dadosPrincipais) {
+    const local = localStorage.getItem(KEY);
+    dadosPrincipais = local ? JSON.parse(local) : JSON.parse(JSON.stringify(DEFAULT_DATA));
+    await salvarCompartilhado('dados_principais', dadosPrincipais);
+  }
+  D = dadosPrincipais;
+  localStorage.setItem(KEY, JSON.stringify(D));
+
+  // ── Hábitos (por usuário)
+  const habData = await lerUsuario('habitos_diarios');
+  if (habData) {
+    localStorage.setItem(HABITOS_KEY, JSON.stringify(habData));
+  } else {
+    const localHab = localStorage.getItem(HABITOS_KEY);
+    if (localHab) await salvarUsuario('habitos_diarios', JSON.parse(localHab)).catch(()=>{});
+  }
+
+  // ── Tarefas Valencia (compartilhadas)
+  let tarValencia = await lerCompartilhado('tarefas_valencia');
+  if (tarValencia === null) {
+    const localT = localStorage.getItem(TAREFAS_KEY);
+    tarValencia = localT ? JSON.parse(localT).filter(t => t.tag === 'valencia') : [];
+    await salvarCompartilhado('tarefas_valencia', tarValencia);
+  }
+
+  // ── Tarefas Vida (por usuário)
+  let tarVida = await lerUsuario('tarefas_vida');
+  if (tarVida === null) {
+    const localT = localStorage.getItem(TAREFAS_KEY);
+    tarVida = localT ? JSON.parse(localT).filter(t => t.tag === 'vida') : [];
+    await salvarUsuario('tarefas_vida', tarVida).catch(()=>{});
+  }
+
+  T = [...(tarVida || []), ...(tarValencia || [])];
+  localStorage.setItem(TAREFAS_KEY, JSON.stringify(T));
+}
+
+// ── Realtime: sincronizar dados compartilhados entre dispositivos
+function initRealtime() {
+  sb.channel('shared_updates')
+    .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'dados_compartilhados' },
+      payload => {
+        const row = payload.new;
+        if (!row) return;
+        if (row.id === 'dados_principais') {
+          D = row.dados;
+          localStorage.setItem(KEY, JSON.stringify(D));
+          const sid = SCREEN_ORDER[currentIdx];
+          if (ROUTES[sid]) ROUTES[sid].render();
+          mostrarToast('Dados atualizados', 'ok');
+        }
+        if (row.id === 'tarefas_valencia') {
+          const vida = T.filter(t => t.tag === 'vida');
+          T = [...vida, ...(row.dados || [])];
+          localStorage.setItem(TAREFAS_KEY, JSON.stringify(T));
+          if (SCREEN_ORDER[currentIdx] === 'tarefas') renderTarefas();
+        }
+      })
+    .subscribe();
 }
 
 function mesAtual() {
@@ -686,7 +840,11 @@ function loadTarefas() {
   try { T = JSON.parse(localStorage.getItem(TAREFAS_KEY) || '[]'); }
   catch(_) { T = []; }
 }
-function saveTarefas() { localStorage.setItem(TAREFAS_KEY, JSON.stringify(T)); }
+function saveTarefas() {
+  localStorage.setItem(TAREFAS_KEY, JSON.stringify(T));
+  salvarUsuario('tarefas_vida', T.filter(t => t.tag === 'vida')).catch(()=>{});
+  salvarCompartilhado('tarefas_valencia', T.filter(t => t.tag === 'valencia')).catch(()=>{});
+}
 
 function openModalTarefa() {
   tagSelecionada = 'vida';
@@ -934,11 +1092,19 @@ function updateClock() {
   const now = new Date();
   el.textContent = now.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit', second:'2-digit'});
 }
+function nomeUsuario(email) {
+  if (!email) return 'Você';
+  const mapa = { 'guilherme.batista23@outlook.com': 'Guilherme' };
+  if (mapa[email.toLowerCase()]) return mapa[email.toLowerCase()];
+  const u = email.split('@')[0].replace(/[._-].*$/, '');
+  return u.charAt(0).toUpperCase() + u.slice(1);
+}
 function greeting() {
+  const nome = currentUser ? nomeUsuario(currentUser.email) : 'Você';
   const h = new Date().getHours();
-  if (h < 12) return 'Bom dia, Guilherme ☀️';
-  if (h < 18) return 'Boa tarde, Guilherme 🌤️';
-  return 'Boa noite, Guilherme 🌙';
+  if (h < 12) return `Bom dia, ${nome} ☀️`;
+  if (h < 18) return `Boa tarde, ${nome} 🌤️`;
+  return `Boa noite, ${nome} 🌙`;
 }
 function dataPorExtenso() {
   return new Date().toLocaleDateString('pt-BR', {weekday:'long', day:'numeric', month:'long', year:'numeric'});
@@ -1617,133 +1783,145 @@ function togglePlanoAcao(mi, ai, checked) {
 }
 
 // ═══════════════════════════════════════════════════
-//  WEBAUTHN / FACE ID
+//  AUTH — Supabase
 // ═══════════════════════════════════════════════════
-function biometriaDisponivel() { return typeof window.PublicKeyCredential !== 'undefined'; }
-
-async function registrarBiometria() {
-  try {
-    const cred = await navigator.credentials.create({
-      publicKey: {
-        challenge: crypto.getRandomValues(new Uint8Array(32)),
-        rp: { name:'Valencia 2028' },
-        user: { id:crypto.getRandomValues(new Uint8Array(16)), name:'guilherme', displayName:'Guilherme' },
-        pubKeyCredParams: [{ alg:-7, type:'public-key' }],
-        authenticatorSelection: { authenticatorAttachment:'platform', userVerification:'required' },
-        timeout: 60000
-      }
-    });
-    localStorage.setItem('biometria_id',    btoa(String.fromCharCode(...new Uint8Array(cred.rawId))));
-    localStorage.setItem('biometria_ativa', 'true');
-    return true;
-  } catch(_) { return false; }
+function mostrarToast(msg, tipo) {
+  const el = document.getElementById('toast');
+  if (!el) return;
+  el.textContent = msg;
+  el.className = 'toast toast-' + (tipo || 'info') + ' show';
+  clearTimeout(el._t);
+  el._t = setTimeout(() => el.classList.remove('show'), 3000);
 }
 
-async function autenticarBiometria() {
-  const credId = localStorage.getItem('biometria_id');
-  if (!credId) return false;
-  try {
-    const assertion = await navigator.credentials.get({
-      publicKey: {
-        challenge: crypto.getRandomValues(new Uint8Array(32)),
-        allowCredentials: [{ id:Uint8Array.from(atob(credId), c=>c.charCodeAt(0)), type:'public-key' }],
-        userVerification: 'required',
-        timeout: 60000
-      }
-    });
-    return !!assertion;
-  } catch(_) { return false; }
+function toggleUserMenu() {
+  const m = document.getElementById('user-menu');
+  if (m) m.classList.toggle('open');
 }
-
-function concluirLogin() {
-  sessionStorage.setItem('autenticado','true');
-  document.getElementById('login-screen').style.display = 'none';
-  load(); checkMesAporte(); loadHabitos(); loadTarefas();
-  initDots(); initSwipe();
-  goToScreen(0, false);
-  atualizarCotacao();
-}
-
-async function entrarComFaceID() {
-  const btn  = document.getElementById('faceid-btn');
-  const orig = btn.textContent;
-  btn.textContent = '⏳ Aguardando...'; btn.disabled = true;
-  const ok = await autenticarBiometria();
-  btn.textContent = orig; btn.disabled = false;
-  if (ok) concluirLogin();
-  else {
-    btn.textContent = '❌ Não reconhecido — use a senha';
-    setTimeout(() => { btn.textContent = orig; }, 2800);
+document.addEventListener('click', e => {
+  const m = document.getElementById('user-menu');
+  const btn = document.getElementById('user-btn');
+  if (m && m.classList.contains('open') && !m.contains(e.target) && e.target !== btn) {
+    m.classList.remove('open');
   }
+});
+
+function atualizarAvatar() {
+  const btn = document.getElementById('user-btn');
+  if (!btn || !currentUser) return;
+  const nome = nomeUsuario(currentUser.email);
+  btn.textContent = nome.charAt(0).toUpperCase();
+  btn.style.display = 'flex';
+  const el1 = document.getElementById('user-menu-nome');
+  const el2 = document.getElementById('user-menu-email');
+  if (el1) el1.textContent = nome;
+  if (el2) el2.textContent = currentUser.email;
 }
 
-function mostrarOfertaBiometria() {
-  if (!biometriaDisponivel() || localStorage.getItem('biometria_ativa')==='true') { concluirLogin(); return; }
-  document.getElementById('biometria-offer').style.display = 'flex';
-}
-async function ativarBiometria() {
-  document.getElementById('biometria-offer').style.display = 'none';
-  await registrarBiometria();
-  atualizarBotaoFaceID();
-  concluirLogin();
-}
-function dispensarBiometria() {
-  document.getElementById('biometria-offer').style.display = 'none';
-  concluirLogin();
-}
-function atualizarBotaoFaceID() {
-  const ativo = biometriaDisponivel() && localStorage.getItem('biometria_ativa')==='true';
-  const btn   = document.getElementById('faceid-btn');
-  const sep   = document.getElementById('faceid-sep');
-  if (btn) btn.style.display = ativo ? 'block' : 'none';
-  if (sep) sep.style.display = ativo ? 'flex'  : 'none';
+function showLoading(v) {
+  const el = document.getElementById('loading-screen');
+  if (el) el.style.display = v ? 'flex' : 'none';
 }
 
-// ═══════════════════════════════════════════════════
-//  AUTH
-// ═══════════════════════════════════════════════════
-const SENHA = window.ENV_SENHA || 'valencia2028';
-
-function checkAuth() {
-  const ls = document.getElementById('login-screen');
-  if (sessionStorage.getItem('autenticado') === 'true') { ls.style.display = 'none'; return true; }
-  ls.style.display = 'flex';
+function showLoginScreen() {
+  document.getElementById('login-screen').style.display = 'flex';
   const days = Math.ceil((new Date('2028-03-01T00:00:00') - new Date().setHours(0,0,0,0)) / 86400000);
   const el = document.getElementById('login-days');
   if (el) el.textContent = days;
-  atualizarBotaoFaceID();
-  setTimeout(() => { document.getElementById('login-senha')?.focus(); }, 100);
-  return false;
+  setTimeout(() => document.getElementById('login-email')?.focus(), 100);
 }
 
-function doLogin() {
-  const inp  = document.getElementById('login-senha');
-  const err  = document.getElementById('login-error');
-  const card = document.querySelector('.login-card');
-  if (!inp) return;
-  if (inp.value === SENHA) {
-    mostrarOfertaBiometria();
-  } else {
-    inp.value = '';
+function concluirLogin() {
+  showLoading(false);
+  document.getElementById('login-screen').style.display = 'none';
+  checkMesAporte();
+  loadHabitos();
+  initDots(); initSwipe();
+  atualizarAvatar();
+  const initId  = (location.hash || '#home').replace('#','');
+  const initIdx = SCREEN_ORDER.indexOf(initId);
+  goToScreen(initIdx >= 0 ? initIdx : 0, false);
+  atualizarCotacao();
+  initRealtime();
+}
+
+async function initApp() {
+  showLoading(true);
+  try {
+    const { data: { session } } = await sb.auth.getSession();
+    if (session) {
+      currentUser = { id: session.user.id, email: session.user.email };
+      await carregarDados();
+      concluirLogin();
+    } else {
+      showLoading(false);
+      showLoginScreen();
+    }
+  } catch(err) {
+    console.error('initApp error:', err);
+    showLoading(false);
+    showLoginScreen();
+  }
+}
+
+async function doLogin() {
+  const emailEl = document.getElementById('login-email');
+  const senhaEl = document.getElementById('login-senha');
+  const btn     = document.getElementById('login-btn');
+  const err     = document.getElementById('login-error');
+  const card    = document.querySelector('.login-card');
+  if (!emailEl || !senhaEl) return;
+
+  const email = emailEl.value.trim();
+  const senha = senhaEl.value;
+  if (!email || !senha) {
+    err.textContent = 'Preencha email e senha.';
+    err.style.display = 'block';
+    return;
+  }
+
+  btn.disabled = true; btn.textContent = '⏳ Entrando...';
+  err.style.display = 'none';
+
+  const { data, error } = await sb.auth.signInWithPassword({ email, password: senha });
+  if (error) {
+    btn.disabled = false; btn.textContent = '🔑 Entrar';
+    err.textContent = 'Email ou senha incorretos.';
     err.style.display = 'block';
     card.classList.remove('login-shake');
     void card.offsetWidth;
     card.classList.add('login-shake');
-    setTimeout(() => { err.style.display = 'none'; inp.focus(); }, 2800);
+    setTimeout(() => { err.style.display = 'none'; senhaEl.value = ''; senhaEl.focus(); }, 2800);
+    return;
   }
+
+  currentUser = { id: data.user.id, email: data.user.email };
+  showLoading(true);
+  await carregarDados();
+  concluirLogin();
+}
+
+async function doLogout() {
+  document.getElementById('user-menu').classList.remove('open');
+  await sb.auth.signOut();
+  currentUser = null;
+  D = {}; H = {}; T = [];
+  document.getElementById('user-btn').style.display = 'none';
+  showLoginScreen();
+}
+
+async function esqueceuSenha() {
+  const email = document.getElementById('login-email').value.trim();
+  if (!email) { mostrarToast('Digite seu email primeiro', 'erro'); return; }
+  const { error } = await sb.auth.resetPasswordForEmail(email);
+  if (error) mostrarToast('Erro ao enviar email', 'erro');
+  else mostrarToast('Email de recuperação enviado!', 'ok');
 }
 
 // ═══════════════════════════════════════════════════
 //  BOOT
 // ═══════════════════════════════════════════════════
-if (checkAuth()) {
-  load(); checkMesAporte(); loadHabitos(); loadTarefas();
-  initDots(); initSwipe();
-  const initId  = (location.hash || '#home').replace('#','');
-  const initIdx = SCREEN_ORDER.indexOf(initId);
-  goToScreen(initIdx >= 0 ? initIdx : 0, false);
-  atualizarCotacao();
-}
+initApp();
 window.addEventListener('hashchange', route);
 </script>
 </body>
