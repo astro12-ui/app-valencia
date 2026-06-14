@@ -649,6 +649,44 @@ function exportJSON() {
 }
 
 // ═══════════════════════════════════════════════════
+//  COTAÇÃO EUR/BRL  (max 1 chamada por dia)
+// ═══════════════════════════════════════════════════
+const COTACAO_KEY = 'cotacao_ultima_atualizacao';
+
+function cotacaoLabel() {
+  const cx   = D.financeiro.cotacao_eur_brl;
+  const last  = localStorage.getItem(COTACAO_KEY);
+  const hoje  = new Date().toDateString();
+  const ontem = new Date(Date.now() - 86400000).toDateString();
+  let quando;
+  if (!last)             quando = 'manual';
+  else if (last === hoje)  quando = 'atualizado hoje';
+  else if (last === ontem) quando = 'atualizado ontem';
+  else                     quando = `atualizado ${new Date(last).toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})}`;
+  return `€1 = R$ ${cx.toFixed(2).replace('.',',')} · ${quando}`;
+}
+
+async function atualizarCotacao() {
+  const hoje = new Date().toDateString();
+  if (localStorage.getItem(COTACAO_KEY) === hoje) return; // já atualizou hoje
+  try {
+    const res  = await fetch('https://open.er-api.com/v6/latest/EUR');
+    const data = await res.json();
+    const cx   = parseFloat(data.rates.BRL);
+    if (!cx || isNaN(cx)) return;
+    D.financeiro.cotacao_eur_brl = parseFloat(cx.toFixed(2));
+    save();
+    localStorage.setItem(COTACAO_KEY, hoje);
+    // Atualiza tela visível se mostrar cotação
+    const sid = SCREEN_ORDER[currentIdx];
+    if (sid === 'dashboard') renderDashboard();
+    if (sid === 'jarros')    renderJarros();
+  } catch (_) {
+    console.log('Cotação: API indisponível, mantendo valor salvo');
+  }
+}
+
+// ═══════════════════════════════════════════════════
 //  UTILS
 // ═══════════════════════════════════════════════════
 function fmtBRL(v) { return 'R$ ' + Number(v).toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 }); }
@@ -867,6 +905,7 @@ function renderDashboard() {
       <div class="countdown-number">${days}</div>
       <div class="countdown-label">dias para o embarque</div>
       <div class="countdown-date">01 de março de 2028</div>
+      <div style="font-size:11px;color:rgba(255,255,255,0.45);margin-top:7px;letter-spacing:0.3px">${cotacaoLabel()}</div>
     </div>
 
     ${proxItem ? `
@@ -1830,6 +1869,7 @@ function doLogin() {
     initDots();
     initSwipe();
     goToScreen(0, false);
+    atualizarCotacao();
   } else {
     inp.value = '';
     err.style.display = 'block';
@@ -1851,6 +1891,7 @@ if (checkAuth()) {
   const initId  = (location.hash || '#dashboard').replace('#', '');
   const initIdx = SCREEN_ORDER.indexOf(initId);
   goToScreen(initIdx >= 0 ? initIdx : 0, false);
+  atualizarCotacao();
 }
 window.addEventListener('hashchange', route);
 </script>
