@@ -714,15 +714,16 @@ function exportJSON() {
 // ═══════════════════════════════════════════════════
 //  COTAÇÃO EUR/BRL  (max 1 chamada por dia)
 // ═══════════════════════════════════════════════════
-const COTACAO_KEY = 'cotacao_ultima_atualizacao';
+// Versão "v2" invalida o cache antigo que guardava valores arredondados
+const COTACAO_KEY = 'cotacao_data_v2';
 
 function cotacaoLabel() {
-  const cx   = D.financeiro.cotacao_eur_brl;
+  const cx    = D.financeiro.cotacao_eur_brl;
   const last  = localStorage.getItem(COTACAO_KEY);
   const hoje  = new Date().toDateString();
   const ontem = new Date(Date.now() - 86400000).toDateString();
   let quando;
-  if (!last)             quando = 'manual';
+  if (!last)               quando = 'manual';
   else if (last === hoje)  quando = 'atualizado hoje';
   else if (last === ontem) quando = 'atualizado ontem';
   else                     quando = `atualizado ${new Date(last).toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})}`;
@@ -731,21 +732,35 @@ function cotacaoLabel() {
 
 async function atualizarCotacao() {
   const hoje = new Date().toDateString();
-  if (localStorage.getItem(COTACAO_KEY) === hoje) return; // já atualizou hoje
+
+  // Verifica se o valor salvo parece arredondado (menos de 3 decimais reais)
+  // Força nova busca nesses casos, mesmo que a data seja hoje
+  const valorArredondado = Number.isInteger(D.financeiro.cotacao_eur_brl * 100);
+  const jaAtualizouHoje  = localStorage.getItem(COTACAO_KEY) === hoje;
+  if (jaAtualizouHoje && !valorArredondado) return;
+
   try {
     const res  = await fetch('https://open.er-api.com/v6/latest/EUR');
     const data = await res.json();
-    const cx   = parseFloat(data.rates.BRL);
+
+    console.log('Cotação recebida da API:', data.rates.BRL);
+
+    // Usa o valor diretamente como número — sem nenhum arredondamento
+    const cx = data.rates.BRL;
     if (!cx || isNaN(cx)) return;
-    D.financeiro.cotacao_eur_brl = cx; // mantém precisão total da API
+
+    console.log('Cotação salva:', cx);
+
+    D.financeiro.cotacao_eur_brl = cx;
     save();
     localStorage.setItem(COTACAO_KEY, hoje);
-    // Atualiza tela visível se mostrar cotação
+
+    // Re-renderiza tela visível se mostra cotação
     const sid = SCREEN_ORDER[currentIdx];
     if (sid === 'dashboard') renderDashboard();
     if (sid === 'jarros')    renderJarros();
-  } catch (_) {
-    console.log('Cotação: API indisponível, mantendo valor salvo');
+  } catch (e) {
+    console.log('Cotação: API indisponível, mantendo valor salvo. Erro:', e.message);
   }
 }
 
