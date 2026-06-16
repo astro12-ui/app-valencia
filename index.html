@@ -496,37 +496,37 @@ const DEFAULT_DATA = {
   },
   seis_jarros: {
     jarros: [
-      { id:"necessidades",  nome:"Necessidades",        emoji:"🏠", percentual:.55, percentual_eker:.55, valor_mensal:4180, alimenta_balde:null,      instrucao:"Aluguel, comida, contas fixas." },
-      { id:"lif",           nome:"Liberdade Financeira",emoji:"💶", percentual:.10, percentual_eker:.10, valor_mensal:760,  alimenta_balde:"EUROS",    instrucao:"Vai direto para a Wise toda 2ª quarta." },
-      { id:"educacao",      nome:"Educação",            emoji:"📚", percentual:.10, percentual_eker:.10, valor_mensal:760,  alimenta_balde:null,       instrucao:"Cursos, livros, Duolingo Plus." },
-      { id:"lazer",         nome:"Lazer",               emoji:"🎮", percentual:.10, percentual_eker:.10, valor_mensal:760,  alimenta_balde:null,       instrucao:"Entretenimento e experiências." },
-      { id:"contribuicao",  nome:"Contribuição",        emoji:"❤️", percentual:.05, percentual_eker:.05, valor_mensal:380,  alimenta_balde:null,       instrucao:"Doações, presentes, família." },
-      { id:"poupanca",      nome:"Poupança Especial",   emoji:"✈️", percentual:.10, percentual_eker:.10, valor_mensal:760,  alimenta_balde:"VIAGEM",   instrucao:"Tesouro Selic — resgate em jan/2028." }
+      { id:"necessidades",  nome:"Necessidades",        emoji:"🏠", percentual:.42, percentual_eker:.55, valor_mensal:3192, alimenta_balde:null,        instrucao:"Aluguel, comida, contas fixas." },
+      { id:"lif",           nome:"Liberdade Financeira",emoji:"💶", percentual:.26, percentual_eker:.10, valor_mensal:1976, alimenta_balde:"EUROS",      instrucao:"Vai direto para a Wise toda 2ª quarta." },
+      { id:"educacao",      nome:"Educação",            emoji:"📚", percentual:.05, percentual_eker:.10, valor_mensal:380,  alimenta_balde:null,         instrucao:"Cursos, livros, Duolingo Plus." },
+      { id:"lazer",         nome:"Lazer",               emoji:"🎮", percentual:.05, percentual_eker:.10, valor_mensal:380,  alimenta_balde:null,         instrucao:"Entretenimento e experiências." },
+      { id:"contribuicao",  nome:"Doação / Reserva",    emoji:"❤️", percentual:.03, percentual_eker:.05, valor_mensal:228,  alimenta_balde:"EMERGENCIA", instrucao:"Complementa a reserva de emergência." },
+      { id:"poupanca",      nome:"Poupança Especial",   emoji:"✈️", percentual:.19, percentual_eker:.10, valor_mensal:1444, alimenta_balde:"VIAGEM",     instrucao:"Tesouro Selic — resgate em jan/2028." }
     ]
   },
   baldes_valencia: {
     balde_euros: {
       id:"EUROS", nome:"Balde Euros", emoji:"💶", moeda:"EUR",
-      saldo_atual:76.46, meta:12000, aporte_mensal:760, onde:"Wise",
+      saldo_atual:76.46, meta:12000, aporte_mensal:1976, onde:"Wise",
       meta_aporte_mensal:1976, aporte_mes_atual:0, mes_corrente:null,
-      instrucao:"Transferir R$760 toda 2ª quarta. Não tocar até Valencia."
+      instrucao:"Transferir R$1.976 toda 2ª quarta. Não tocar até Valencia."
     },
     balde_viagem: {
       id:"VIAGEM", nome:"Balde Viagem", emoji:"✈️", moeda:"BRL",
-      saldo_atual:0, meta:14550, aporte_mensal:760, onde:"Tesouro Selic",
+      saldo_atual:0, meta:14550, aporte_mensal:1444, onde:"Tesouro Selic",
       meta_aporte_mensal:1444, aporte_mes_atual:0, mes_corrente:null,
       itens_cobertos:[
-        {item:"Passagens (2 pessoas)",valor:6000},{item:"Transporte da gata",valor:2500},
-        {item:"Bagagem extra",valor:1500},{item:"Documentação gata",valor:1800},
-        {item:"1º mês Valencia (colchão)",valor:2750}
+        {item:"Passagens aéreas (casal)",valor:9000},{item:"Gata (microchip, vacinas, transportadora, taxa pet)",valor:2700},
+        {item:"Bagagens extras",valor:1000},{item:"Casamento cartório",valor:1500},
+        {item:"Passaporte Guilherme",valor:350}
       ],
       instrucao:"Investir no Tesouro Selic. Resgatar em jan/2028."
     },
     balde_emergencia: {
       id:"EMERGENCIA", nome:"Emergência", emoji:"🛡️", moeda:"BRL",
-      saldo_atual:12935.75, meta:19200, aporte_mensal:0, onde:"Nubank + Inter Esposa",
+      saldo_atual:11000, meta:19200, aporte_mensal:228, onde:"CDB liquidez diária",
       meta_aporte_mensal:228, aporte_mes_atual:0, mes_corrente:null,
-      meta_minima:7600,
+      meta_minima:9600,
       instrucao:"6 meses de renda. Não misturar com Balde Viagem."
     }
   },
@@ -549,8 +549,8 @@ const DEFAULT_DATA = {
   ],
   metas: [
     { id:"capital_chegada",   nome:"Capital na chegada", emoji:"💶", moeda:"EUR", valor_atual:76.46,    valor_alvo:12000, prazo:"2028-03-01", status:"em_andamento" },
-    { id:"balde_viagem_meta", nome:"Balde Viagem",       emoji:"✈️", moeda:"BRL", valor_atual:0,        valor_alvo:14550, prazo:"2028-01-01", status:"nao_iniciado" },
-    { id:"reserva_6meses",    nome:"Reserva 6 meses",    emoji:"🛡️", moeda:"BRL", valor_atual:12935.75, valor_alvo:19200, prazo:"2028-01-01", status:"em_andamento" },
+    { id:"balde_viagem_meta", nome:"Balde Viagem",       emoji:"✈️", moeda:"BRL", valor_atual:0,        valor_alvo:14550, prazo:"2028-01-01", status:"em_andamento" },
+    { id:"reserva_6meses",    nome:"Reserva 6 meses",    emoji:"🛡️", moeda:"BRL", valor_atual:11000,    valor_alvo:19200, prazo:"2028-01-01", status:"em_andamento" },
     { id:"passaporte",        nome:"Passaporte emitido", emoji:"🛂", moeda:null,   valor_atual:null, valor_alvo:null,  prazo:"2026-08-01", status:"nao_iniciado" },
     { id:"streak_espanhol",   nome:"Streak Duolingo 365d",emoji:"🇪🇸",moeda:null,  valor_atual:null, valor_alvo:null,  prazo:"2027-06-01", status:"nao_iniciado" }
   ],
@@ -583,6 +583,7 @@ const DEFAULT_DATA = {
     guilherme: [
       { id:'inter_conta',    nome:'Inter conta',    valor:15.35,   moeda:'BRL' },
       { id:'inter_poupanca', nome:'Inter poupança', valor:13.05,   moeda:'BRL' },
+      { id:'nubank_conta',   nome:'Nubank conta',   valor:0.91,    moeda:'BRL' },
       { id:'nubank_pj',      nome:'Nubank PJ',      valor:5179.75, moeda:'BRL' },
       { id:'wise_eur',       nome:'Wise EUR',       valor:76.46,   moeda:'EUR' },
       { id:'wise_usd',       nome:'Wise USD',       valor:106.10,  moeda:'USD' },
