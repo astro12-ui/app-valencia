@@ -200,6 +200,26 @@
     .tarefa-del:hover { opacity: 1 !important; color: var(--danger); }
     .tarefa-empty { font-size: 12px; color: var(--muted); padding: 6px 0; font-style: italic; }
 
+    /* ── Agenda (Calendário) ── */
+    .cal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+    .cal-mes-label { font-size: 15px; font-weight: 700; text-transform: capitalize; }
+    .cal-nav-btn { background: var(--card); border: 1px solid var(--border); color: var(--text); width: 34px; height: 34px; border-radius: 50%; font-size: 18px; cursor: pointer; line-height: 1; }
+    .cal-nav-btn:active { transform: scale(0.92); }
+    .cal-weekdays { display: grid; grid-template-columns: repeat(7,1fr); text-align: center; font-size: 10px; color: var(--muted); font-weight: 700; text-transform: uppercase; margin-bottom: 4px; }
+    .cal-grid { display: grid; grid-template-columns: repeat(7,1fr); gap: 4px; }
+    .cal-cell { aspect-ratio: 1; background: var(--card); border: 1px solid var(--border); border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; gap: 3px; padding: 2px; }
+    .cal-cell.cal-empty { background: transparent; border: none; cursor: default; }
+    .cal-cell.cal-selected { border-color: var(--primary); border-width: 2px; }
+    .cal-cell.cal-passado { opacity: .4; }
+    .cal-daynum { font-size: 12px; font-weight: 600; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; border-radius: 50%; flex-shrink: 0; }
+    .cal-daynum.cal-hoje { background: var(--primary); color: #fff; }
+    .cal-dots { display: flex; gap: 2px; height: 6px; align-items: center; }
+    .cal-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+    .cal-dot-vida { background: #00d4aa; }
+    .cal-dot-valencia { background: #6c63ff; }
+    .cal-dot-trabalho { background: #ffd166; }
+    .cal-more { font-size: 8px; color: var(--muted); line-height: 6px; }
+
     /* FAB */
     .fab {
       position: fixed; bottom: 88px; right: max(16px, calc((100vw - 480px) / 2));
@@ -435,6 +455,7 @@
   <div id="screen-home"     class="screen"></div>
   <div id="screen-habitos"  class="screen"></div>
   <div id="screen-tarefas"  class="screen"></div>
+  <div id="screen-agenda"   class="screen"></div>
   <div id="screen-financas" class="screen"></div>
   <div id="screen-valencia" class="screen"></div>
 </div>
@@ -452,6 +473,8 @@
       <button class="tag-sel-btn" id="tag-btn-vida"     onclick="selecionarTag('vida')">🏠 Vida</button>
       <button class="tag-sel-btn" id="tag-btn-valencia" onclick="selecionarTag('valencia')">🇪🇸 Valencia</button>
     </div>
+    <label>Data (opcional)</label>
+    <input id="modal-data" class="input" type="date" style="margin-bottom:14px">
     <button class="btn btn-primary btn-full" onclick="confirmarTarefa()">Adicionar</button>
     <button class="btn btn-outline btn-full" style="margin-top:8px" onclick="closeModalTarefa()">Cancelar</button>
   </div>
@@ -462,6 +485,7 @@
   <a class="nav-item active" href="#home"     id="nav-home">    <span>🏠</span><span>Home</span></a>
   <a class="nav-item"        href="#habitos"  id="nav-habitos"> <span>✅</span><span>Hábitos</span></a>
   <a class="nav-item"        href="#tarefas"  id="nav-tarefas"> <span>📋</span><span>Tarefas</span></a>
+  <a class="nav-item"        href="#agenda"   id="nav-agenda">  <span>📅</span><span>Agenda</span></a>
   <a class="nav-item"        href="#financas" id="nav-financas"><span>💶</span><span>Finanças</span></a>
   <a class="nav-item"        href="#valencia" id="nav-valencia"><span>✈️</span><span>Valencia</span></a>
 </nav>
@@ -820,7 +844,7 @@ function initRealtime() {
           const vida = T.filter(t => t.tag === 'vida');
           T = [...vida, ...(row.dados || [])];
           localStorage.setItem(TAREFAS_KEY, JSON.stringify(T));
-          if (SCREEN_ORDER[currentIdx] === 'tarefas') renderTarefas();
+          renderAtual();
         }
       })
     .subscribe();
@@ -907,6 +931,8 @@ function adicionarAporte(id) {
 const TAREFAS_KEY = 'tarefas_v2';
 let T = [];
 let tagSelecionada = 'vida';
+let calMes = new Date(); calMes.setDate(1);
+let diaSelecionado = todayStr();
 
 function loadTarefas() {
   try { T = JSON.parse(localStorage.getItem(TAREFAS_KEY) || '[]'); }
@@ -918,12 +944,24 @@ function saveTarefas() {
   salvarCompartilhado('tarefas_valencia', T.filter(t => t.tag === 'valencia')).catch(()=>{});
 }
 
+// Renderiza a tela atualmente visível (Tarefas ou Agenda), usada após mudanças nos dados
+function renderAtual() {
+  const sid = SCREEN_ORDER[currentIdx];
+  if (sid === 'tarefas') renderTarefas();
+  if (sid === 'agenda')  renderAgenda();
+}
+
 function openModalTarefa() {
   tagSelecionada = 'vida';
   document.getElementById('modal-texto').value = '';
+  document.getElementById('modal-data').value = '';
   selecionarTag('vida');
   document.getElementById('modal-tarefa').classList.add('open');
   setTimeout(() => document.getElementById('modal-texto').focus(), 100);
+}
+function abrirModalParaData(dataStr) {
+  openModalTarefa();
+  document.getElementById('modal-data').value = dataStr;
 }
 function closeModalTarefa() { document.getElementById('modal-tarefa').classList.remove('open'); }
 function selecionarTag(tag) {
@@ -934,10 +972,11 @@ function selecionarTag(tag) {
 function confirmarTarefa() {
   const txt = document.getElementById('modal-texto').value.trim();
   if (!txt) return;
-  T.push({ id: Date.now().toString(), texto: txt, tag: tagSelecionada, feita: false });
+  const dataVal = document.getElementById('modal-data').value || null;
+  T.push({ id: Date.now().toString(), texto: txt, tag: tagSelecionada, data: dataVal, feita: false, criada_em: new Date().toISOString() });
   saveTarefas();
   closeModalTarefa();
-  renderTarefas();
+  renderAtual();
 }
 function toggleTarefa(id) {
   const t = T.find(x => x.id === id);
@@ -945,17 +984,17 @@ function toggleTarefa(id) {
   arquivarTarefa(t);
   t.feita = true;
   saveTarefas();
-  renderTarefas();
+  renderAtual();
   setTimeout(() => {
     T = T.filter(x => x.id !== id);
     saveTarefas();
-    renderTarefas();
+    renderAtual();
   }, 1800);
 }
 function excluirTarefa(id) {
   T = T.filter(x => x.id !== id);
   saveTarefas();
-  renderTarefas();
+  renderAtual();
 }
 
 // ═══════════════════════════════════════════════════
@@ -1052,10 +1091,11 @@ const ROUTES = {
   home:     { title: '🏠 Home',      render: renderHome     },
   habitos:  { title: '✅ Hábitos',   render: renderHabitos  },
   tarefas:  { title: '📋 Tarefas',   render: renderTarefas  },
+  agenda:   { title: '📅 Agenda',    render: renderAgenda   },
   financas: { title: '💶 Finanças',  render: renderFinancas },
   valencia: { title: '✈️ Valencia',  render: renderValencia }
 };
-const SCREEN_ORDER = ['home','habitos','tarefas','financas','valencia'];
+const SCREEN_ORDER = ['home','habitos','tarefas','agenda','financas','valencia'];
 let chart = null;
 let expandedItems = new Set();
 let currentIdx = 0;
@@ -1485,12 +1525,14 @@ function renderTarefas() {
   const valencia = T.filter(t => t.tag === 'valencia');
 
   function tarefaItem(t) {
+    const dataBadge = t.data ? `<span class="text-xs text-muted" style="margin-right:6px;flex-shrink:0">📅 ${fmtDateShort(t.data)}</span>` : '';
     return `
     <div class="tarefa-item" id="ti-${t.id}">
       <div class="tarefa-cb${t.feita ? ' checked' : ''}" onclick="toggleTarefa('${t.id}')">
         ${t.feita ? '✓' : ''}
       </div>
       <span class="tarefa-texto${t.feita ? ' riscado' : ''}">${escHtml(t.texto)}</span>
+      ${dataBadge}
       <button class="tarefa-del" onclick="excluirTarefa('${t.id}')">🗑</button>
     </div>`;
   }
@@ -1510,6 +1552,90 @@ function renderTarefas() {
         <span class="text-xs text-muted">${valencia.length} tarefa${valencia.length!==1?'s':''}</span>
       </div>
       ${valencia.length ? valencia.map(tarefaItem).join('') : '<div class="tarefa-empty">Nenhuma tarefa. Toque + para adicionar.</div>'}
+    </div>
+  `;
+}
+
+// ═══════════════════════════════════════════════════
+//  TELA — AGENDA (Calendário)
+// ═══════════════════════════════════════════════════
+const MESES_PT = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+const DIAS_SEMANA_PT = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+
+function fmtDateShort(s) { const [,m,d] = s.split('-'); return `${d}/${m}`; }
+function dateStrYMD(y,m,d) { return `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`; }
+
+function mudarMesCalendario(delta) {
+  calMes.setMonth(calMes.getMonth() + delta);
+  renderAgenda();
+}
+function selecionarDiaCalendario(ds) {
+  diaSelecionado = ds;
+  renderAgenda();
+}
+
+function renderAgenda() {
+  const el = document.getElementById('screen-agenda');
+  const y = calMes.getFullYear();
+  const m = calMes.getMonth();
+  const diasNoMes = new Date(y, m+1, 0).getDate();
+  const diaSemanaInicio = new Date(y, m, 1).getDay();
+  const hojeStr = todayStr();
+
+  const tarefasPorDia = {};
+  T.forEach(t => {
+    if (t.data && !t.feita) {
+      if (!tarefasPorDia[t.data]) tarefasPorDia[t.data] = [];
+      tarefasPorDia[t.data].push(t.tag);
+    }
+  });
+
+  let celulas = '';
+  for (let i=0; i<diaSemanaInicio; i++) celulas += `<div class="cal-cell cal-empty"></div>`;
+  for (let d=1; d<=diasNoMes; d++) {
+    const ds = dateStrYMD(y,m,d);
+    const isHoje = ds === hojeStr;
+    const isPassado = ds < hojeStr;
+    const isSelecionado = ds === diaSelecionado;
+    const tags = tarefasPorDia[ds] || [];
+    const dotsHtml = tags.slice(0,3).map(tag => `<span class="cal-dot cal-dot-${tag}"></span>`).join('')
+      + (tags.length > 3 ? '<span class="cal-more">···</span>' : '');
+    celulas += `
+      <div class="cal-cell${isSelecionado?' cal-selected':''}${isPassado?' cal-passado':''}" onclick="selecionarDiaCalendario('${ds}')">
+        <div class="cal-daynum${isHoje?' cal-hoje':''}">${d}</div>
+        <div class="cal-dots">${dotsHtml}</div>
+      </div>`;
+  }
+
+  const tarefasDoDia = T.filter(t => t.data === diaSelecionado);
+  const [, mmSel, ddSel] = diaSelecionado.split('-');
+  const tituloDia = `${parseInt(ddSel)} de ${MESES_PT[parseInt(mmSel)-1].toLowerCase()}`;
+
+  function diaTarefaItem(t) {
+    return `
+    <div class="tarefa-item" id="ti-${t.id}">
+      <div class="tarefa-cb${t.feita ? ' checked' : ''}" onclick="toggleTarefa('${t.id}')">${t.feita ? '✓' : ''}</div>
+      <span class="tag-pill tag-${t.tag}" style="margin-right:6px;flex-shrink:0">${t.tag==='vida'?'🏠':'🇪🇸'}</span>
+      <span class="tarefa-texto${t.feita ? ' riscado' : ''}">${escHtml(t.texto)}</span>
+      <button class="tarefa-del" onclick="excluirTarefa('${t.id}')">🗑</button>
+    </div>`;
+  }
+
+  el.innerHTML = `
+    <div class="cal-header">
+      <button class="cal-nav-btn" onclick="mudarMesCalendario(-1)">‹</button>
+      <div class="cal-mes-label">${MESES_PT[m]} ${y}</div>
+      <button class="cal-nav-btn" onclick="mudarMesCalendario(1)">›</button>
+    </div>
+    <div class="cal-weekdays">${DIAS_SEMANA_PT.map(d=>`<div>${d}</div>`).join('')}</div>
+    <div class="cal-grid">${celulas}</div>
+
+    <div class="tarefa-section" style="margin-top:16px">
+      <div class="tarefa-section-title" style="margin-bottom:10px;justify-content:space-between;width:100%">
+        <span>Tarefas — ${tituloDia}</span>
+        <button class="btn btn-primary btn-sm" onclick="abrirModalParaData('${diaSelecionado}')">+ Adicionar</button>
+      </div>
+      ${tarefasDoDia.length ? tarefasDoDia.map(diaTarefaItem).join('') : '<div class="tarefa-empty">Nenhuma tarefa para este dia ✨</div>'}
     </div>
   `;
 }
